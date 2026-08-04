@@ -74,16 +74,17 @@
   }
   .section-title:first-of-type{margin-top:0;}
 
-  .week-card{
+  .day-card{
     background:var(--card); border:1px solid var(--border); border-radius:16px;
     padding:14px 16px; margin-bottom:10px;
   }
-  .week-card .periode{font-size:11.5px; color:var(--text-muted); margin:0 0 10px; font-weight:600;}
+  .day-card .periode{font-size:11.5px; color:var(--text-muted); margin:0 0 10px; font-weight:600;}
   .shift-row{display:flex; justify-content:space-between; align-items:center; padding:6px 0;}
   .shift-row .shift-label{font-size:11px; color:var(--text-muted); width:52px; flex-shrink:0;}
   .shift-row .shift-nama{font-size:13.5px; font-weight:600; flex:1;}
+  .shift-row .shift-nama.kosong{color:var(--text-muted); font-weight:400; font-style:italic;}
   .shift-row a{color:var(--blue-600); text-decoration:none; font-size:12px; font-weight:600;}
-  .week-card.current{border-color:var(--blue-600); border-width:2px;}
+  .day-card.current{border-color:var(--blue-600); border-width:2px;}
   .badge-now{
     display:inline-block; background:var(--blue-100); color:var(--blue-700);
     font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:6px; margin-left:8px;
@@ -110,15 +111,16 @@
 
 <script src="./config.js"></script>
 <script>
-  const fmtDate = (d) => new Date(d).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" });
+  const fmtDate = (d) => new Date(d).toLocaleDateString("id-ID", { weekday:"long", day:"numeric", month:"short", year:"numeric" });
 
   const DEMO_JADWAL = {
-    shiftAktif: "Malam",
-    petugasAktif: { nama: "Pak Slamet", hp: "081234567891" },
-    mingguIniTerisi: true,
+    shiftAktif: "Siang",
+    petugasAktif: { nama: "Pak Budi", hp: "081234567890" },
+    hariIniTerisi: true,
     riwayat: [
-      { mingguMulai:"2026-08-04", siang:{nama:"Pak Budi", hp:"081234567890"}, malam:{nama:"Pak Slamet", hp:"081234567891"} },
-      { mingguMulai:"2026-07-28", siang:{nama:"Pak Slamet", hp:"081234567891"}, malam:{nama:"Pak Budi", hp:"081234567890"} }
+      { tanggal:"2026-08-04", siang:{nama:"Pak Budi", hp:"081234567890"}, malam:{nama:"Pak Budi", hp:"081234567890"} },
+      { tanggal:"2026-08-03", siang:{nama:"", hp:""}, malam:{nama:"Pak Slamet", hp:"081234567891"} },
+      { tanggal:"2026-08-02", siang:{nama:"Pak Slamet", hp:"081234567891"}, malam:{nama:"Pak Slamet", hp:"081234567891"} }
     ]
   };
 
@@ -141,41 +143,48 @@
 
     let html = "";
 
-    if(!jadwal.mingguIniTerisi || !jadwal.petugasAktif){
-      html += '<div class="empty-notice">Jadwal minggu ini belum diisi oleh admin.</div>';
+    if(!jadwal.hariIniTerisi){
+      html += '<div class="empty-notice">Jadwal hari ini belum diisi oleh admin.</div>';
+    } else if(!jadwal.petugasAktif || !jadwal.petugasAktif.nama){
+      html += `
+        <div class="active-card">
+          <p class="label">Shift ${jadwal.shiftAktif} · Hari ini</p>
+          <p class="nama">Tidak ada petugas</p>
+          <p class="shift">Shift malam akan mulai bertugas nanti</p>
+        </div>`;
     } else {
       const p = jadwal.petugasAktif;
       html += `
         <div class="active-card">
           <p class="label">Sedang bertugas · Shift ${jadwal.shiftAktif}</p>
-          <p class="nama">${p.nama || "-"}</p>
+          <p class="nama">${p.nama}</p>
           <p class="shift">Tap untuk chat WhatsApp</p>
           ${p.hp ? `<a class="call" href="${waLink(p.hp)}" target="_blank">💬 ${p.hp}</a>` : ""}
         </div>`;
     }
 
-    html += '<p class="section-title">Riwayat &amp; Jadwal Mingguan</p>';
+    html += '<p class="section-title">Riwayat &amp; Jadwal Harian</p>';
 
     if(!jadwal.riwayat || jadwal.riwayat.length === 0){
       html += '<p class="empty">Belum ada jadwal tercatat.</p>';
     } else {
       const todayStr = new Date().toISOString().slice(0,10);
-      html += jadwal.riwayat.map(m => {
-        const mulai = new Date(m.mingguMulai);
-        const selesai = new Date(mulai.getTime() + 6*24*60*60*1000);
-        const isCurrent = m.mingguMulai <= todayStr && todayStr <= selesai.toISOString().slice(0,10);
+      html += jadwal.riwayat.map(h => {
+        const isCurrent = h.tanggal === todayStr;
+        const siangKosong = !h.siang.nama;
+        const malamKosong = !h.malam.nama;
         return `
-          <div class="week-card ${isCurrent ? "current" : ""}">
-            <p class="periode">${fmtDate(mulai)} - ${fmtDate(selesai)} ${isCurrent ? '<span class="badge-now">Minggu ini</span>' : ""}</p>
+          <div class="day-card ${isCurrent ? "current" : ""}">
+            <p class="periode">${fmtDate(h.tanggal)} ${isCurrent ? '<span class="badge-now">Hari ini</span>' : ""}</p>
             <div class="shift-row">
               <span class="shift-label">Siang</span>
-              <span class="shift-nama">${m.siang.nama || "-"}</span>
-              ${m.siang.hp ? `<a href="${waLink(m.siang.hp)}" target="_blank">WhatsApp</a>` : ""}
+              <span class="shift-nama ${siangKosong ? "kosong" : ""}">${siangKosong ? "Libur / kosong" : h.siang.nama}</span>
+              ${!siangKosong && h.siang.hp ? `<a href="${waLink(h.siang.hp)}" target="_blank">WhatsApp</a>` : ""}
             </div>
             <div class="shift-row">
               <span class="shift-label">Malam</span>
-              <span class="shift-nama">${m.malam.nama || "-"}</span>
-              ${m.malam.hp ? `<a href="${waLink(m.malam.hp)}" target="_blank">WhatsApp</a>` : ""}
+              <span class="shift-nama ${malamKosong ? "kosong" : ""}">${malamKosong ? "Libur / kosong" : h.malam.nama}</span>
+              ${!malamKosong && h.malam.hp ? `<a href="${waLink(h.malam.hp)}" target="_blank">WhatsApp</a>` : ""}
             </div>
           </div>`;
       }).join("");
