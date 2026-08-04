@@ -102,6 +102,11 @@
 
   .empty{text-align:center; color:var(--text-muted); font-size:13px; padding:20px 0;}
 
+  .bb-item{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13.5px;}
+  .bb-item:last-child{border-bottom:none;}
+  .bb-item .kav{color:var(--text-muted); font-size:12px; margin-left:6px;}
+  .bb-badge{background:#FBE7DE; color:var(--coral-600); font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px;}
+
   .install-bar{
     position:fixed; left:16px; right:16px; bottom:16px;
     background:var(--teal-900); color:#fff; border-radius:14px;
@@ -157,6 +162,11 @@
   </div>
 
   <div class="card">
+    <p class="title">Belum bayar bulan ini</p>
+    <div id="belum-bayar-list"><p class="empty">Memuat data...</p></div>
+  </div>
+
+  <div class="card">
     <p class="title">Rincian jenis IPL bulan ini</p>
     <div class="kategori-row"><span>IPL Lengkap</span><span class="nominal mono" id="kat-lengkap">Rp -</span></div>
     <div class="kategori-row"><span>IPL Keamanan</span><span class="nominal mono" id="kat-keamanan">Rp -</span></div>
@@ -164,7 +174,7 @@
   </div>
 
   <div class="card">
-    <p class="title">Transaksi terbaru</p>
+    <p class="title">Riwayat transaksi</p>
     <div id="tx-list"><p class="empty">Memuat transaksi...</p></div>
   </div>
 </main>
@@ -178,16 +188,21 @@
 
   const DEMO_DATA = {
     saldo: 42850000,
-    pemasukanBulanIni: 13500000,
-    pengeluaranBulanIni: 9200000,
-    unitAktif: 45,
-    unitSudahBayar: 35,
-    unitBelumBayar: 10,
-    breakdown: { iplLengkap: 6000000, iplKeamanan: 4200000, iplKhusus: 3300000 },
+    pemasukanBulanIni: 4170000,
+    pengeluaranBulanIni: 100000,
+    unitAktif: 26,
+    unitSudahBayar: 20,
+    belumBayar: [
+      { kav:"B3", nama:"Pak Teguh" },
+      { kav:"B4", nama:"Bu Baniatun" },
+      { kav:"D3", nama:"Pak Ian" },
+      { kav:"E1", nama:"Pak Fauzan" }
+    ],
+    breakdown: { iplLengkap: 3000000, iplKeamanan: 750000, iplKhusus: 240000 },
     transaksiTerbaru: [
-      { tanggal:"2026-08-02", jenis:"Masuk", kategori:"IPL Lengkap", unit:"A-12", jumlah:200000, keterangan:"Bayar IPL Agustus" },
-      { tanggal:"2026-08-01", jenis:"Keluar", kategori:"Gaji Keamanan", unit:"", jumlah:4500000, keterangan:"Gaji satpam Agustus" },
-      { tanggal:"2026-07-31", jenis:"Masuk", kategori:"IPL Keamanan", unit:"B-03", jumlah:150000, keterangan:"Bayar IPL Juli" }
+      { tanggal:"2026-08-01", jenis:"Masuk", kategori:"IPL Lengkap", unit:"E2", jumlah:200000, keterangan:"Pak Erwan" },
+      { tanggal:"2026-08-01", jenis:"Masuk", kategori:"IPL Keamanan", unit:"B9", jumlah:150000, keterangan:"Pak Ecsa" },
+      { tanggal:"2026-08-01", jenis:"Keluar", kategori:"Listrik", unit:"", jumlah:100000, keterangan:"" }
     ]
   };
 
@@ -203,9 +218,23 @@
     document.getElementById("masuk-bulan").textContent = rupiah(data.pemasukanBulanIni);
     document.getElementById("keluar-bulan").textContent = rupiah(data.pengeluaranBulanIni);
 
-    const pct = data.unitAktif ? Math.round((data.unitSudahBayar / data.unitAktif) * 100) : 0;
+    const belumBayar = data.belumBayar || [];
+    const unitSudahBayar = data.unitSudahBayar != null ? data.unitSudahBayar : (data.unitAktif - belumBayar.length);
+    const pct = data.unitAktif ? Math.round((unitSudahBayar / data.unitAktif) * 100) : 0;
     document.getElementById("progress-fill").style.width = pct + "%";
-    document.getElementById("progress-label").textContent = `${data.unitSudahBayar}/${data.unitAktif} unit`;
+    document.getElementById("progress-label").textContent = `${unitSudahBayar}/${data.unitAktif} unit`;
+
+    const bbList = document.getElementById("belum-bayar-list");
+    if(belumBayar.length === 0){
+      bbList.innerHTML = '<p class="empty">Semua unit sudah bayar bulan ini 🎉</p>';
+    } else {
+      bbList.innerHTML = belumBayar.map(u =>
+        `<div class="bb-item">
+          <span>${u.nama || "-"}<span class="kav">${u.kav || ""}</span></span>
+          <span class="bb-badge">Belum bayar</span>
+        </div>`
+      ).join("");
+    }
 
     document.getElementById("kat-lengkap").textContent = rupiah(data.breakdown.iplLengkap);
     document.getElementById("kat-keamanan").textContent = rupiah(data.breakdown.iplKeamanan);
