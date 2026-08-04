@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Panggilan Darurat - Kas IPL Vertihouse Sawangan II</title>
+<meta name="theme-color" content="#7A2E1D" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<link rel="icon" href="./icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#FAF5F3;
+    --card:#FFFFFF;
+    --red-900:#5C1F14;
+    --red-700:#7A2E1D;
+    --red-600:#A83F27;
+    --red-100:#F7E1DA;
+    --text-1:#241A16;
+    --text-2:#6E5B54;
+    --text-muted:#A6928B;
+    --border:#EBDDD7;
+    font-family:"Plus Jakarta Sans", -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text-1);
+    padding-bottom:calc(env(safe-area-inset-bottom) + 24px);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mono{font-family:"JetBrains Mono", monospace;}
+
+  header{
+    padding:calc(env(safe-area-inset-top) + 18px) 20px 16px;
+    display:flex; align-items:center; gap:12px;
+    background:var(--red-700); color:#fff;
+    border-bottom-left-radius:20px; border-bottom-right-radius:20px;
+  }
+  .back-btn{
+    width:36px; height:36px; border-radius:10px; border:none;
+    background:rgba(255,255,255,0.15); color:#fff;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .back-btn svg{width:18px; height:18px;}
+  header h1{font-size:16px; font-weight:700; margin:0;}
+  header p{font-size:12px; margin:2px 0 0; color:rgba(255,255,255,0.75);}
+
+  main{padding:18px 20px 8px;}
+
+  .notice{
+    background:var(--red-100); color:var(--red-700); font-size:12.5px;
+    padding:12px 14px; border-radius:12px; margin-bottom:16px; line-height:1.5;
+  }
+
+  .call-card{
+    display:flex; align-items:center; gap:14px;
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:14px 16px; margin-bottom:12px; text-decoration:none; color:inherit;
+  }
+  .call-card:active{background:var(--red-100);}
+  .call-icon{
+    flex-shrink:0; width:44px; height:44px; border-radius:999px;
+    background:var(--red-100); color:var(--red-700);
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+  }
+  .call-info{flex:1; min-width:0;}
+  .call-label{font-size:13.5px; font-weight:600; margin:0 0 2px; color:var(--text-1);}
+  .call-sub{font-size:11.5px; color:var(--text-muted); margin:0 0 4px;}
+  .call-number{font-size:16px; font-weight:700; color:var(--red-700); margin:0;}
+  .call-arrow{flex-shrink:0; color:var(--red-600); font-size:18px;}
+
+  .section-title{
+    font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--text-muted); margin:20px 2px 10px;
+  }
+  .section-title:first-of-type{margin-top:0;}
+
+  .footer-note{
+    font-size:11.5px; color:var(--text-muted); text-align:center;
+    padding:16px 20px 4px; line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="back-btn" onclick="location.href='./index.html'" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+  </button>
+  <div>
+    <h1>🚨 Panggilan Darurat</h1>
+    <p>Vertihouse Sawangan II · Depok, Jawa Barat</p>
+  </div>
+</header>
+
+<main>
+  <div class="notice">
+    Tap salah satu nomor di bawah untuk langsung menelepon. Gunakan hanya untuk kondisi darurat sungguhan.
+  </div>
+
+  <p class="section-title">Nomor Darurat Nasional</p>
+
+  <a class="call-card" href="tel:112">
+    <span class="call-icon">☎️</span>
+    <span class="call-info">
+      <p class="call-label">Panggilan Darurat Terpadu</p>
+      <p class="call-sub">Polisi · Kebakaran · Medis · Bencana — gratis, 24 jam</p>
+      <p class="call-number mono">112</p>
+    </span>
+    <span class="call-arrow">›</span>
+  </a>
+
+  <a class="call-card" href="tel:110">
+    <span class="call-icon">👮</span>
+    <span class="call-info">
+      <p class="call-label">Polisi</p>
+      <p class="call-sub">Call center nasional POLRI</p>
+      <p class="call-number mono">110</p>
+    </span>
+    <span class="call-arrow">›</span>
+  </a>
+
+  <a class="call-card" href="tel:113">
+    <span class="call-icon">🚒</span>
+    <span class="call-info">
+      <p class="call-label">Pemadam Kebakaran</p>
+      <p class="call-sub">Call center nasional</p>
+      <p class="call-number mono">113</p>
+    </span>
+    <span class="call-arrow">›</span>
+  </a>
+
+  <a class="call-card" href="tel:119">
+    <span class="call-icon">🚑</span>
+    <span class="call-info">
+      <p class="call-label">Ambulans</p>
+      <p class="call-sub">PSC (Public Safety Center) nasional</p>
+      <p class="call-number mono">119</p>
+    </span>
+    <span class="call-arrow">›</span>
+  </a>
+
+  <p class="section-title">Nomor Lokal Sawangan &amp; Depok</p>
+
+  <a class="call-card" href="tel:+62217496879">
+    <span class="call-icon">👮</span>
+    <span class="call-info">
+      <p class="call-label">Polsek Sawangan</p>
+      <p class="call-sub">Kedaung, Kec. Sawangan, Depok</p>
+      <p class="call-number mono">(021) 749-6879</p>
+    </span>
+    <span class="call-arrow">›</span>
+  </a>
+
+  <a class="call-card" href="tel:+622177827280">
+    <span class="call-icon">🚒</span>
+    <span class="call-info">
+      <p class="call-label">Mako Damkar Kota Depok</p>
+      <p class="call-sub">Dinas Pemadam Kebakaran &amp; Penyelamatan</p>
+      <p class="call-number mono">(021) 778-27280</p>
+    </span>
+    <span class="call-arrow">›</span>
+  </a>
+
+  <p class="footer-note">
+    Nomor berdasarkan data publik resmi (per Agustus 2026). Simpan halaman ini sebagai akses cepat kontak darurat warga Vertihouse Sawangan II.
+  </p>
+</main>
+
+</body>
+</html>
