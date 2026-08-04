@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Jadwal Jaga - Kas IPL Vertihouse Sawangan II</title>
+<meta name="theme-color" content="#0F4C6E" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<link rel="icon" href="./icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#F3F6FA;
+    --card:#FFFFFF;
+    --blue-900:#0A3A54;
+    --blue-700:#0F4C6E;
+    --blue-600:#15668F;
+    --blue-100:#DCEBF4;
+    --text-1:#16232B;
+    --text-2:#5C6E78;
+    --text-muted:#94A5AD;
+    --border:#DCE6EC;
+    font-family:"Plus Jakarta Sans", -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text-1);
+    padding-bottom:calc(env(safe-area-inset-bottom) + 24px);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mono{font-family:"JetBrains Mono", monospace;}
+
+  header{
+    padding:calc(env(safe-area-inset-top) + 18px) 20px 16px;
+    display:flex; align-items:center; gap:12px;
+    background:var(--blue-700); color:#fff;
+    position:sticky; top:0; z-index:20;
+  }
+  .back-btn{
+    width:36px; height:36px; border-radius:10px; border:none;
+    background:rgba(255,255,255,0.15); color:#fff;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .back-btn svg{width:18px; height:18px;}
+  header h1{font-size:16px; font-weight:700; margin:0;}
+  header p{font-size:12px; margin:2px 0 0; color:rgba(255,255,255,0.75);}
+
+  main{padding:18px 20px 8px;}
+
+  .empty-notice{
+    background:var(--blue-100); color:var(--blue-700); font-size:12.5px;
+    padding:12px 14px; border-radius:12px; margin-bottom:16px; line-height:1.5;
+  }
+
+  .active-card{
+    background:var(--blue-700); color:#fff; border-radius:20px;
+    padding:20px; margin-bottom:16px;
+  }
+  .active-card .label{font-size:12px; color:rgba(255,255,255,0.7); margin:0 0 6px; text-transform:uppercase; letter-spacing:0.04em;}
+  .active-card .nama{font-size:22px; font-weight:700; margin:0 0 4px;}
+  .active-card .shift{font-size:13px; color:rgba(255,255,255,0.8); margin:0 0 14px;}
+  .active-card a.call{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.15); color:#fff; text-decoration:none;
+    padding:10px 16px; border-radius:12px; font-size:14px; font-weight:600;
+  }
+
+  .section-title{
+    font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--text-muted); margin:20px 2px 10px;
+  }
+  .section-title:first-of-type{margin-top:0;}
+
+  .week-card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .week-card .periode{font-size:11.5px; color:var(--text-muted); margin:0 0 10px; font-weight:600;}
+  .shift-row{display:flex; justify-content:space-between; align-items:center; padding:6px 0;}
+  .shift-row .shift-label{font-size:11px; color:var(--text-muted); width:52px; flex-shrink:0;}
+  .shift-row .shift-nama{font-size:13.5px; font-weight:600; flex:1;}
+  .shift-row a{color:var(--blue-600); text-decoration:none; font-size:12px; font-weight:600;}
+  .week-card.current{border-color:var(--blue-600); border-width:2px;}
+  .badge-now{
+    display:inline-block; background:var(--blue-100); color:var(--blue-700);
+    font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:6px; margin-left:8px;
+  }
+
+  .empty{text-align:center; color:var(--text-muted); font-size:13px; padding:20px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="back-btn" onclick="location.href='./index.html'" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+  </button>
+  <div>
+    <h1>👮 Jadwal Jaga</h1>
+    <p>Vertihouse Sawangan II</p>
+  </div>
+</header>
+
+<main id="main-content">
+  <p class="empty">Memuat jadwal...</p>
+</main>
+
+<script src="./config.js"></script>
+<script>
+  const fmtDate = (d) => new Date(d).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" });
+
+  const DEMO_JADWAL = {
+    shiftAktif: "Malam",
+    petugasAktif: { nama: "Pak Slamet", hp: "081234567891" },
+    mingguIniTerisi: true,
+    riwayat: [
+      { mingguMulai:"2026-08-04", siang:{nama:"Pak Budi", hp:"081234567890"}, malam:{nama:"Pak Slamet", hp:"081234567891"} },
+      { mingguMulai:"2026-07-28", siang:{nama:"Pak Slamet", hp:"081234567891"}, malam:{nama:"Pak Budi", hp:"081234567890"} }
+    ]
+  };
+
+  function telLink(hp){
+    if(!hp) return "";
+    const digits = hp.replace(/[^0-9]/g, "");
+    if(digits.startsWith("0")) return "+62" + digits.slice(1);
+    if(digits.startsWith("62")) return "+" + digits;
+    return digits;
+  }
+
+  function render(jadwal){
+    const main = document.getElementById("main-content");
+    if(!jadwal){
+      main.innerHTML = '<div class="empty-notice">Sheet "JADWAL JAGA" belum dibuat atau belum diisi. Hubungi admin untuk melengkapi jadwal.</div>';
+      return;
+    }
+
+    let html = "";
+
+    if(!jadwal.mingguIniTerisi || !jadwal.petugasAktif){
+      html += '<div class="empty-notice">Jadwal minggu ini belum diisi oleh admin.</div>';
+    } else {
+      const p = jadwal.petugasAktif;
+      html += `
+        <div class="active-card">
+          <p class="label">Sedang bertugas · Shift ${jadwal.shiftAktif}</p>
+          <p class="nama">${p.nama || "-"}</p>
+          <p class="shift">Tap untuk hubungi langsung</p>
+          ${p.hp ? `<a class="call" href="tel:${telLink(p.hp)}">📞 ${p.hp}</a>` : ""}
+        </div>`;
+    }
+
+    html += '<p class="section-title">Riwayat &amp; Jadwal Mingguan</p>';
+
+    if(!jadwal.riwayat || jadwal.riwayat.length === 0){
+      html += '<p class="empty">Belum ada jadwal tercatat.</p>';
+    } else {
+      const todayStr = new Date().toISOString().slice(0,10);
+      html += jadwal.riwayat.map(m => {
+        const mulai = new Date(m.mingguMulai);
+        const selesai = new Date(mulai.getTime() + 6*24*60*60*1000);
+        const isCurrent = m.mingguMulai <= todayStr && todayStr <= selesai.toISOString().slice(0,10);
+        return `
+          <div class="week-card ${isCurrent ? "current" : ""}">
+            <p class="periode">${fmtDate(mulai)} - ${fmtDate(selesai)} ${isCurrent ? '<span class="badge-now">Minggu ini</span>' : ""}</p>
+            <div class="shift-row">
+              <span class="shift-label">Siang</span>
+              <span class="shift-nama">${m.siang.nama || "-"}</span>
+              ${m.siang.hp ? `<a href="tel:${telLink(m.siang.hp)}">Telepon</a>` : ""}
+            </div>
+            <div class="shift-row">
+              <span class="shift-label">Malam</span>
+              <span class="shift-nama">${m.malam.nama || "-"}</span>
+              ${m.malam.hp ? `<a href="tel:${telLink(m.malam.hp)}">Telepon</a>` : ""}
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    main.innerHTML = html;
+  }
+
+  async function loadData(){
+    const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
+    if(usingDemo){
+      render(DEMO_JADWAL);
+      return;
+    }
+    try{
+      const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
+      const data = await res.json();
+      render(data.jadwalJaga);
+    }catch(err){
+      render(DEMO_JADWAL);
+    }
+  }
+
+  loadData();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+  }
+</script>
+</body>
+</html>
