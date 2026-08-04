@@ -6,8 +6,8 @@
 <title>Kas IPL Vertihouse Sawangan II</title>
 <meta name="theme-color" content="#0F6E56" />
 <link rel="manifest" href="./manifest.json" />
-<link rel="apple-touch-icon" href="./icons/icon-192.png" />
-<link rel="icon" href="./icons/icon-192.png" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<link rel="icon" href="./icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
@@ -40,6 +40,19 @@
   header{
     padding:calc(env(safe-area-inset-top) + 18px) 20px 14px;
     display:flex; align-items:center; justify-content:space-between;
+  }
+  .topbar{position:sticky; top:0; z-index:20; background:var(--bg);}
+  .pengumuman-bar{
+    display:flex; align-items:flex-start; gap:10px;
+    background:var(--teal-800); color:#fff; border-radius:14px;
+    padding:12px 14px; margin:0 20px 14px;
+  }
+  .pengumuman-bar .icon{font-size:16px; line-height:1.4;}
+  .pengumuman-bar .judul{font-size:13px; font-weight:700; margin:0 0 2px;}
+  .pengumuman-bar .isi{font-size:12.5px; color:var(--teal-50); margin:0; line-height:1.5;}
+  .pengumuman-bar .tutup{
+    background:none; border:none; color:var(--teal-100); font-size:16px;
+    line-height:1; padding:0 0 0 6px; margin-left:auto; align-self:flex-start;
   }
   header h1{font-size:16px; font-weight:600; margin:0; color:var(--text-1);}
   header p{font-size:12px; margin:2px 0 0; color:var(--text-2);}
@@ -123,6 +136,7 @@
 </head>
 <body>
 
+<div class="topbar">
 <header>
   <div>
     <h1 id="nama-komplek">Kas IPL</h1>
@@ -132,6 +146,8 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
   </button>
 </header>
+<div id="pengumuman-bar" style="display:none;"></div>
+</div>
 
 <main>
   <div id="demo-banner" class="demo-banner" style="display:none;"></div>
@@ -199,6 +215,11 @@
       { kav:"E1", nama:"Pak Fauzan" }
     ],
     breakdown: { iplLengkap: 3000000, iplKeamanan: 750000, iplKhusus: 240000 },
+    pengumuman: {
+      aktif: true,
+      judul: "Kerja Bakti Minggu Ini",
+      isi: "Kerja bakti Sabtu 8 Agustus jam 07.00, kumpul di pos satpam. (Ini contoh - isi lewat sheet PENGUMUMAN)"
+    },
     transaksiTerbaru: [
       { tanggal:"2026-08-01", jenis:"Masuk", kategori:"IPL Lengkap", unit:"E2", jumlah:200000, keterangan:"Pak Erwan" },
       { tanggal:"2026-08-01", jenis:"Masuk", kategori:"IPL Keamanan", unit:"B9", jumlah:150000, keterangan:"Pak Ecsa" },
@@ -211,6 +232,22 @@
     if(isDemo){
       document.getElementById("demo-banner").textContent =
         "Mode demo - data contoh. Isi CONFIG.API_URL di config.js dengan URL Apps Script Anda untuk data asli.";
+    }
+
+    const pgBar = document.getElementById("pengumuman-bar");
+    if(data.pengumuman && data.pengumuman.aktif){
+      pgBar.style.display = "flex";
+      pgBar.innerHTML = `
+        <span class="icon">📣</span>
+        <div style="flex:1">
+          <p class="judul">${data.pengumuman.judul || "Pengumuman"}</p>
+          <p class="isi">${data.pengumuman.isi}</p>
+        </div>
+        <button class="tutup" aria-label="Tutup pengumuman">✕</button>`;
+      pgBar.querySelector(".tutup").onclick = () => { pgBar.style.display = "none"; };
+    } else {
+      pgBar.style.display = "none";
+      pgBar.innerHTML = "";
     }
 
     document.getElementById("saldo").textContent = rupiah(data.saldo);
