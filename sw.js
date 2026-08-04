@@ -1,10 +1,10 @@
-const CACHE_NAME = "kas-ipl-shell-v1";
+const CACHE_NAME = "kas-ipl-shell-v2";
 const SHELL_FILES = [
   "./index.html",
   "./manifest.json",
   "./config.js",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -23,18 +23,26 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Shell files: cache-first (so app installs & opens offline).
-// Data requests to the Apps Script API: always go to network (never cached),
-// so warga always see fresh saldo/transaksi.
+// Data (Apps Script): selalu network, tidak pernah di-cache.
+// Shell (html/js/css/icon): NETWORK-FIRST - selalu coba ambil versi terbaru
+// dari internet dulu; kalau offline/gagal, baru fallback ke cache.
+// Ini supaya update yang kita deploy selalu langsung kepakai, tidak nyangkut
+// di versi lama seperti sebelumnya.
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  const isDataRequest = url.hostname.includes("script.google.com");
+  const isDataRequest = url.hostname.includes("script.google.com") || url.hostname.includes("script.googleusercontent.com");
 
   if (isDataRequest) {
-    return; // let it hit network normally, no caching of financial data
+    return; // biarkan langsung ke network, tidak disentuh sama sekali
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
