@@ -122,12 +122,14 @@
     ]
   };
 
-  function telLink(hp){
+  function waLink(hp){
     if(!hp) return "";
     const digits = hp.replace(/[^0-9]/g, "");
-    if(digits.startsWith("0")) return "+62" + digits.slice(1);
-    if(digits.startsWith("62")) return "+" + digits;
-    return digits;
+    let normalized = digits;
+    if(digits.startsWith("0")) normalized = "62" + digits.slice(1);
+    else if(!digits.startsWith("62")) normalized = "62" + digits;
+    const pesan = encodeURIComponent("Halo, saya warga Vertihouse Sawangan II.");
+    return `https://wa.me/${normalized}?text=${pesan}`;
   }
 
   function render(jadwal){
@@ -147,8 +149,8 @@
         <div class="active-card">
           <p class="label">Sedang bertugas · Shift ${jadwal.shiftAktif}</p>
           <p class="nama">${p.nama || "-"}</p>
-          <p class="shift">Tap untuk hubungi langsung</p>
-          ${p.hp ? `<a class="call" href="tel:${telLink(p.hp)}">📞 ${p.hp}</a>` : ""}
+          <p class="shift">Tap untuk chat WhatsApp</p>
+          ${p.hp ? `<a class="call" href="${waLink(p.hp)}" target="_blank">💬 ${p.hp}</a>` : ""}
         </div>`;
     }
 
@@ -168,12 +170,12 @@
             <div class="shift-row">
               <span class="shift-label">Siang</span>
               <span class="shift-nama">${m.siang.nama || "-"}</span>
-              ${m.siang.hp ? `<a href="tel:${telLink(m.siang.hp)}">Telepon</a>` : ""}
+              ${m.siang.hp ? `<a href="${waLink(m.siang.hp)}" target="_blank">WhatsApp</a>` : ""}
             </div>
             <div class="shift-row">
               <span class="shift-label">Malam</span>
               <span class="shift-nama">${m.malam.nama || "-"}</span>
-              ${m.malam.hp ? `<a href="tel:${telLink(m.malam.hp)}">Telepon</a>` : ""}
+              ${m.malam.hp ? `<a href="${waLink(m.malam.hp)}" target="_blank">WhatsApp</a>` : ""}
             </div>
           </div>`;
       }).join("");
