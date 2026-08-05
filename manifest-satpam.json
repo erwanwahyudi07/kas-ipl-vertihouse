@@ -1,9 +1,10 @@
 {
+  "id": "/patroli.html",
   "name": "Portal Satpam - Vertihouse Sawangan II",
   "short_name": "Portal Satpam",
   "description": "Absensi jaga (check-in/out) untuk petugas keamanan Vertihouse Sawangan II",
   "start_url": "./patroli.html",
-  "scope": "./",
+  "scope": "./patroli.html",
   "display": "standalone",
   "background_color": "#F3F6FA",
   "theme_color": "#0F4C6E",
