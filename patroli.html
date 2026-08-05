@@ -41,12 +41,6 @@
     background:var(--blue-700); color:#fff;
     position:sticky; top:0; z-index:20;
   }
-  .back-btn{
-    width:36px; height:36px; border-radius:10px; border:none;
-    background:rgba(255,255,255,0.15); color:#fff;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  }
-  .back-btn svg{width:18px; height:18px;}
   header h1{font-size:16px; font-weight:700; margin:0;}
   header p{font-size:12px; margin:2px 0 0; color:rgba(255,255,255,0.75);}
 
@@ -64,18 +58,10 @@
     color:var(--text-muted); margin:16px 2px 10px;
   }
 
-  .area-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;}
-  .area-btn{
-    background:var(--card); border:1.5px solid var(--border); border-radius:14px;
-    padding:16px 8px; font-size:15px; font-weight:700; color:var(--blue-700);
-    font-family:inherit;
-  }
-  .area-btn:active{background:var(--blue-100); border-color:var(--blue-600);}
-
   .shift-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
   .shift-btn{
-    border:none; border-radius:14px; padding:16px 10px; font-size:14px; font-weight:700;
-    color:#fff; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:4px;
+    border:none; border-radius:14px; padding:22px 10px; font-size:15px; font-weight:700;
+    color:#fff; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;
   }
   .shift-btn.masuk{background:var(--green-600);}
   .shift-btn.keluar{background:#B7452F;}
@@ -101,7 +87,9 @@
     background:var(--card); border:1px solid var(--border); border-radius:12px;
     padding:12px 14px; margin-bottom:8px; font-size:13px;
   }
-  .riwayat-item .area{font-weight:600;}
+  .riwayat-item .jenis{font-weight:600;}
+  .riwayat-item .jenis.masuk{color:var(--green-600);}
+  .riwayat-item .jenis.keluar{color:#B7452F;}
   .riwayat-item .waktu{color:var(--text-muted); font-size:12px;}
 
   .empty{text-align:center; color:var(--text-muted); font-size:13px; padding:16px 0;}
@@ -112,7 +100,7 @@
 <header>
   <div>
     <h1>🚶 Portal Satpam</h1>
-    <p>Vertihouse Sawangan II · Check-in Ronda &amp; Shift</p>
+    <p>Vertihouse Sawangan II · Absensi Jaga</p>
   </div>
 </header>
 
@@ -132,20 +120,7 @@
     <span>Keluar: <b id="jam-keluar">-</b></span>
   </div>
 
-  <p class="section-title">Tap blok yang baru selesai dironda</p>
-  <div class="area-grid" id="area-grid">
-    <button class="area-btn" data-area="Blok A">Blok A</button>
-    <button class="area-btn" data-area="Blok B">Blok B</button>
-    <button class="area-btn" data-area="Blok C">Blok C</button>
-    <button class="area-btn" data-area="Blok D">Blok D</button>
-    <button class="area-btn" data-area="Blok E">Blok E</button>
-    <button class="area-btn" data-area="Blok F">Blok F</button>
-    <button class="area-btn" data-area="Blok G">Blok G</button>
-    <button class="area-btn" data-area="Gerbang / Pos Jaga">Gerbang</button>
-    <button class="area-btn" data-area="Keliling Umum">Keliling</button>
-  </div>
-
-  <p class="section-title">Check-in Terakhir</p>
+  <p class="section-title">Riwayat Absensi Terakhir</p>
   <div id="riwayat-list"><p class="empty">Memuat...</p></div>
 </main>
 
@@ -165,14 +140,18 @@
   function renderRiwayat(list){
     const el = document.getElementById("riwayat-list");
     if(!list || list.length === 0){
-      el.innerHTML = '<p class="empty">Belum ada check-in tercatat.</p>';
+      el.innerHTML = '<p class="empty">Belum ada absensi tercatat.</p>';
       return;
     }
-    el.innerHTML = list.slice(0, 8).map(r => `
+    el.innerHTML = list.slice(0, 8).map(r => {
+      const isMasuk = r.jenis === "Masuk";
+      const icon = isMasuk ? "🟢" : "🔴";
+      return `
       <div class="riwayat-item">
-        <span class="area">${r.area || "-"} · ${r.nama || "-"}</span>
-        <span class="waktu">${r.waktu.split(" ")[1] || r.waktu}</span>
-      </div>`).join("");
+        <span class="jenis ${isMasuk ? "masuk" : "keluar"}">${icon} ${r.jenis} · ${r.nama || "-"}</span>
+        <span class="waktu">${(r.waktu || "").split(" ")[1] || r.waktu}</span>
+      </div>`;
+    }).join("");
   }
 
   async function loadInfo(){
@@ -188,7 +167,7 @@
       const jadwal = data.jadwalJaga;
       namaPetugasSaatIni = (jadwal && jadwal.petugasAktif && jadwal.petugasAktif.nama) || "Tidak diketahui";
       document.getElementById("nama-petugas").textContent = namaPetugasSaatIni;
-      renderRiwayat(data.patroliTerakhir);
+      renderRiwayat(data.shiftTerakhir);
 
       const shift = data.shiftHariIni || {};
       document.getElementById("jam-masuk").textContent = shift.masuk ? shift.masuk.waktu : "-";
@@ -207,7 +186,7 @@
       await fetch(CONFIG.API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ type: "shift", jenis: jenis })
+        body: JSON.stringify({ jenis: jenis })
       });
       showToast(jenis === "Masuk" ? "🟢 Mulai jaga tercatat" : "🔴 Selesai jaga tercatat");
       loadInfo();
@@ -218,30 +197,6 @@
 
   document.getElementById("btn-masuk").addEventListener("click", () => checkInOutShift("Masuk"));
   document.getElementById("btn-keluar").addEventListener("click", () => checkInOutShift("Keluar"));
-
-  async function checkIn(area){
-    if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
-      showToast("Mode demo - belum terhubung ke Apps Script");
-      return;
-    }
-    try{
-      await fetch(CONFIG.API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ area: area })
-      });
-      showToast(`✓ Ronda "${area}" tercatat`);
-      loadInfo();
-    }catch(err){
-      showToast("Gagal mencatat, coba lagi");
-    }
-  }
-
-  document.getElementById("area-grid").addEventListener("click", (e) => {
-    const btn = e.target.closest(".area-btn");
-    if(!btn) return;
-    checkIn(btn.dataset.area);
-  });
 
   loadInfo();
 
