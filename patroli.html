@@ -58,15 +58,19 @@
     color:var(--text-muted); margin:16px 2px 10px;
   }
 
-  .shift-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
-  .shift-btn{
-    border:none; border-radius:14px; padding:22px 10px; font-size:15px; font-weight:700;
-    color:#fff; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;
+  .shift-toggle-btn{
+    width:100%; border:none; border-radius:14px; padding:22px 10px; font-size:16px; font-weight:700;
+    color:#fff; font-family:inherit; margin-bottom:8px;
   }
-  .shift-btn.masuk{background:var(--green-600);}
-  .shift-btn.keluar{background:#B7452F;}
-  .shift-btn:active{opacity:0.85;}
-  .shift-btn:disabled{background:var(--border); color:var(--text-muted); opacity:0.7;}
+  .shift-toggle-btn.masuk{background:var(--green-600);}
+  .shift-toggle-btn.keluar{background:#B7452F;}
+  .shift-toggle-btn:active{opacity:0.85;}
+  .shift-toggle-btn:disabled{background:var(--border); color:var(--text-muted); opacity:0.7;}
+  .durasi-jaga{
+    text-align:center; font-size:13px; color:var(--text-2); font-weight:600;
+    margin-bottom:12px; display:none;
+  }
+  .durasi-jaga .mono{font-size:14px; color:var(--text-1);}
   .shift-status{
     display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);
     padding:0 4px; margin-bottom:20px;
@@ -128,10 +132,8 @@
   </div>
 
   <p class="section-title">Mulai / Selesai Jaga</p>
-  <div class="shift-grid">
-    <button class="shift-btn masuk" id="btn-masuk">Mulai Jaga</button>
-    <button class="shift-btn keluar" id="btn-keluar">Selesai Jaga</button>
-  </div>
+  <div class="durasi-jaga" id="durasi-jaga">Sudah bertugas: <span class="mono" id="durasi-teks">00:00:00</span></div>
+  <button class="shift-toggle-btn masuk" id="btn-shift-toggle">Mulai Jaga</button>
   <div class="shift-status">
     <span>Masuk: <b id="jam-masuk">-</b></span>
     <span>Keluar: <b id="jam-keluar">-</b></span>
@@ -178,8 +180,37 @@
     }).join("");
   }
 
+  let sedangBertugasSaatIni = false;
+  let durasiInterval = null;
+
+  function pad2(n){ return String(n).padStart(2, "0"); }
+
+  function mulaiTimerDurasi(masukTimestamp){
+    clearInterval(durasiInterval);
+    const wrap = document.getElementById("durasi-jaga");
+    const teks = document.getElementById("durasi-teks");
+    wrap.style.display = "block";
+
+    function update(){
+      const diff = Math.max(0, Date.now() - masukTimestamp);
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      teks.textContent = `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+    }
+    update();
+    durasiInterval = setInterval(update, 1000);
+  }
+
+  function hentikanTimerDurasi(){
+    clearInterval(durasiInterval);
+    document.getElementById("durasi-jaga").style.display = "none";
+  }
+
   async function loadInfo(){
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
+    const btnToggle = document.getElementById("btn-shift-toggle");
+
     if(usingDemo){
       document.getElementById("nama-petugas").textContent = "Mode demo";
       renderRiwayat([]);
@@ -189,25 +220,34 @@
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
       const jadwal = data.jadwalJaga;
-
-      const btnMasuk = document.getElementById("btn-masuk");
-      const btnKeluar = document.getElementById("btn-keluar");
+      const shift = data.shiftHariIni || {};
 
       if(jadwal && jadwal.izinAktif){
         namaPetugasSaatIni = jadwal.izinAktif.nama || "Tidak diketahui";
         document.getElementById("nama-petugas").textContent = `${namaPetugasSaatIni} (berhalangan, shift kosong)`;
-        btnMasuk.disabled = true;
-        btnKeluar.disabled = true;
+        btnToggle.disabled = true;
+        btnToggle.textContent = "Shift Kosong";
+        btnToggle.className = "shift-toggle-btn masuk";
+        hentikanTimerDurasi();
       } else {
         namaPetugasSaatIni = (jadwal && jadwal.petugasAktif && jadwal.petugasAktif.nama) || "Tidak diketahui";
         document.getElementById("nama-petugas").textContent = namaPetugasSaatIni;
-        btnMasuk.disabled = false;
-        btnKeluar.disabled = false;
+        btnToggle.disabled = false;
+
+        sedangBertugasSaatIni = !!shift.sedangBertugas;
+        if(sedangBertugasSaatIni){
+          btnToggle.textContent = "Selesai Jaga";
+          btnToggle.className = "shift-toggle-btn keluar";
+          mulaiTimerDurasi(shift.masukTimestamp || Date.now());
+        } else {
+          btnToggle.textContent = "Mulai Jaga";
+          btnToggle.className = "shift-toggle-btn masuk";
+          hentikanTimerDurasi();
+        }
       }
 
       renderRiwayat(data.shiftTerakhir);
 
-      const shift = data.shiftHariIni || {};
       document.getElementById("jam-masuk").textContent = shift.masuk ? shift.masuk.waktu : "-";
       document.getElementById("jam-keluar").textContent = shift.keluar ? shift.keluar.waktu : "-";
     }catch(err){
@@ -215,7 +255,8 @@
     }
   }
 
-  async function checkInOutShift(jenis){
+  async function checkInOutShift(){
+    const jenis = sedangBertugasSaatIni ? "Keluar" : "Masuk";
     if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
       showToast("Mode demo - belum terhubung ke Apps Script");
       return;
@@ -233,8 +274,7 @@
     }
   }
 
-  document.getElementById("btn-masuk").addEventListener("click", () => checkInOutShift("Masuk"));
-  document.getElementById("btn-keluar").addEventListener("click", () => checkInOutShift("Keluar"));
+  document.getElementById("btn-shift-toggle").addEventListener("click", () => checkInOutShift());
 
   document.getElementById("btn-buka-izin").addEventListener("click", () => {
     const form = document.getElementById("izin-form");
