@@ -151,7 +151,7 @@
     return `https://wa.me/${normalized}?text=${pesan}`;
   }
 
-  function render(jadwal){
+  function render(jadwal, izin){
     const main = document.getElementById("main-content");
     if(!jadwal){
       main.innerHTML = '<div class="empty-notice">Sheet "JADWAL JAGA" belum dibuat atau belum diisi. Hubungi admin untuk melengkapi jadwal.</div>';
@@ -159,6 +159,10 @@
     }
 
     let html = "";
+
+    if(izin && izin.alasan){
+      html += `<div class="empty-notice">${izin.nama || "Petugas"} berhalangan hari ini. Alasan: ${izin.alasan}</div>`;
+    }
 
     if(!jadwal.hariIniTerisi){
       html += '<div class="empty-notice">Jadwal hari ini belum diisi oleh admin.</div>';
@@ -241,7 +245,7 @@
   async function loadData(){
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
     if(usingDemo){
-      render(DEMO_JADWAL);
+      render(DEMO_JADWAL, null);
       renderShiftInfo({ masuk:{waktu:"19:02"}, keluar:null });
       renderJadwalList(DEMO_JADWAL);
       return;
@@ -249,11 +253,11 @@
     try{
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
-      render(data.jadwalJaga);
+      render(data.jadwalJaga, data.izinHariIni);
       renderShiftInfo(data.shiftHariIni);
       renderJadwalList(data.jadwalJaga);
     }catch(err){
-      render(DEMO_JADWAL);
+      render(DEMO_JADWAL, null);
       renderShiftInfo(null);
       renderJadwalList(DEMO_JADWAL);
     }
