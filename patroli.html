@@ -72,6 +72,20 @@
   }
   .area-btn:active{background:var(--blue-100); border-color:var(--blue-600);}
 
+  .shift-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
+  .shift-btn{
+    border:none; border-radius:14px; padding:16px 10px; font-size:14px; font-weight:700;
+    color:#fff; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  .shift-btn.masuk{background:var(--green-600);}
+  .shift-btn.keluar{background:#B7452F;}
+  .shift-btn:active{opacity:0.85;}
+  .shift-status{
+    display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);
+    padding:0 4px; margin-bottom:20px;
+  }
+  .shift-status b{color:var(--text-1);}
+
   .toast{
     position:fixed; left:20px; right:20px; bottom:24px;
     background:var(--green-600); color:#fff; padding:14px 18px; border-radius:14px;
@@ -109,6 +123,16 @@
   <div class="info-card">
     <p class="label">Petugas terdaftar sedang bertugas</p>
     <p class="nama" id="nama-petugas">Memuat...</p>
+  </div>
+
+  <p class="section-title">Mulai / Selesai Jaga</p>
+  <div class="shift-grid">
+    <button class="shift-btn masuk" id="btn-masuk">🟢 Mulai Jaga</button>
+    <button class="shift-btn keluar" id="btn-keluar">🔴 Selesai Jaga</button>
+  </div>
+  <div class="shift-status">
+    <span>Masuk: <b id="jam-masuk">-</b></span>
+    <span>Keluar: <b id="jam-keluar">-</b></span>
   </div>
 
   <p class="section-title">Tap blok yang baru selesai dironda</p>
@@ -168,10 +192,35 @@
       namaPetugasSaatIni = (jadwal && jadwal.petugasAktif && jadwal.petugasAktif.nama) || "Tidak diketahui";
       document.getElementById("nama-petugas").textContent = namaPetugasSaatIni;
       renderRiwayat(data.patroliTerakhir);
+
+      const shift = data.shiftHariIni || {};
+      document.getElementById("jam-masuk").textContent = shift.masuk ? shift.masuk.waktu : "-";
+      document.getElementById("jam-keluar").textContent = shift.keluar ? shift.keluar.waktu : "-";
     }catch(err){
       document.getElementById("nama-petugas").textContent = "Gagal memuat";
     }
   }
+
+  async function checkInOutShift(jenis){
+    if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
+      showToast("Mode demo - belum terhubung ke Apps Script");
+      return;
+    }
+    try{
+      await fetch(CONFIG.API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ type: "shift", jenis: jenis })
+      });
+      showToast(jenis === "Masuk" ? "🟢 Mulai jaga tercatat" : "🔴 Selesai jaga tercatat");
+      loadInfo();
+    }catch(err){
+      showToast("Gagal mencatat, coba lagi");
+    }
+  }
+
+  document.getElementById("btn-masuk").addEventListener("click", () => checkInOutShift("Masuk"));
+  document.getElementById("btn-keluar").addEventListener("click", () => checkInOutShift("Keluar"));
 
   async function checkIn(area){
     if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
