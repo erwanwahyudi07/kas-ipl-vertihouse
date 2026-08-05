@@ -92,6 +92,20 @@
 
   .empty{text-align:center; color:var(--text-muted); font-size:13px; padding:20px 0;}
 
+  .info-banner{
+    display:flex; align-items:flex-start; gap:12px;
+    background:var(--blue-700); color:#fff; border-radius:16px;
+    padding:14px 16px; margin:14px 20px 4px;
+    box-shadow:0 6px 16px rgba(15,76,110,0.28);
+  }
+  .info-banner .icon-badge{
+    flex-shrink:0; width:28px; height:28px; border-radius:999px;
+    background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
+  .info-banner .judul{font-size:14px; font-weight:700; margin:0 0 4px; color:#fff;}
+  .info-banner .isi{font-size:12.5px; font-weight:400; color:rgba(255,255,255,0.85); margin:0; line-height:1.55;}
+
   .shift-info-card{
     display:flex; justify-content:space-around;
     background:var(--card); border:1px solid var(--border); border-radius:12px;
@@ -114,8 +128,12 @@
   </div>
 </header>
 
-<div style="padding:14px 20px 0;">
-  <div class="empty-notice" style="margin-bottom:0;">ℹ️ Pergantian jaga (shift) dilakukan setiap hari pukul <b>08.00 pagi</b> dan <b>20.00 (08.00 malam)</b>.</div>
+<div class="info-banner">
+  <span class="icon-badge">ℹ️</span>
+  <div style="flex:1">
+    <p class="judul">Info Pergantian Jaga</p>
+    <p class="isi">Shift berganti setiap hari pukul <b>08.00 pagi</b> dan <b>20.00 (08.00 malam)</b>.</p>
+  </div>
 </div>
 
 <main id="main-content">
