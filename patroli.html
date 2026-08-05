@@ -72,6 +72,22 @@
   }
   .shift-status b{color:var(--text-1);}
 
+  .izin-btn{
+    width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px;
+    padding:14px 10px; font-size:14px; font-weight:600; color:var(--text-1); font-family:inherit;
+  }
+  .izin-btn:active{background:var(--bg);}
+  .izin-form textarea{
+    width:100%; border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+    font-family:inherit; font-size:13px; color:var(--text-1); resize:vertical; margin-top:10px;
+    box-sizing:border-box;
+  }
+  .izin-kirim-btn{
+    width:100%; border:none; border-radius:12px; padding:12px; margin-top:8px;
+    background:var(--blue-700); color:#fff; font-size:13.5px; font-weight:600; font-family:inherit;
+  }
+  .izin-kirim-btn:active{opacity:0.85;}
+
   .toast{
     position:fixed; left:20px; right:20px; bottom:24px;
     background:var(--green-600); color:#fff; padding:14px 18px; border-radius:14px;
@@ -112,12 +128,19 @@
 
   <p class="section-title">Mulai / Selesai Jaga</p>
   <div class="shift-grid">
-    <button class="shift-btn masuk" id="btn-masuk">🟢 Mulai Jaga</button>
-    <button class="shift-btn keluar" id="btn-keluar">🔴 Selesai Jaga</button>
+    <button class="shift-btn masuk" id="btn-masuk">Mulai Jaga</button>
+    <button class="shift-btn keluar" id="btn-keluar">Selesai Jaga</button>
   </div>
   <div class="shift-status">
     <span>Masuk: <b id="jam-masuk">-</b></span>
     <span>Keluar: <b id="jam-keluar">-</b></span>
+  </div>
+
+  <p class="section-title">Berhalangan / Tidak Bisa Masuk</p>
+  <button class="izin-btn" id="btn-buka-izin">Ajukan Izin / Berhalangan</button>
+  <div class="izin-form" id="izin-form" style="display:none;">
+    <textarea id="izin-alasan" rows="3" placeholder="Tulis alasan (misal: sakit, keperluan keluarga)..."></textarea>
+    <button class="izin-kirim-btn" id="btn-kirim-izin">Kirim Izin</button>
   </div>
 
   <p class="section-title">Riwayat Absensi Terakhir</p>
@@ -188,7 +211,7 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ jenis: jenis })
       });
-      showToast(jenis === "Masuk" ? "🟢 Mulai jaga tercatat" : "🔴 Selesai jaga tercatat");
+      showToast(jenis === "Masuk" ? "Mulai jaga tercatat" : "Selesai jaga tercatat");
       loadInfo();
     }catch(err){
       showToast("Gagal mencatat, coba lagi");
@@ -197,6 +220,35 @@
 
   document.getElementById("btn-masuk").addEventListener("click", () => checkInOutShift("Masuk"));
   document.getElementById("btn-keluar").addEventListener("click", () => checkInOutShift("Keluar"));
+
+  document.getElementById("btn-buka-izin").addEventListener("click", () => {
+    const form = document.getElementById("izin-form");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+
+  document.getElementById("btn-kirim-izin").addEventListener("click", async () => {
+    const alasan = document.getElementById("izin-alasan").value.trim();
+    if(!alasan){
+      showToast("Tulis alasan dulu ya");
+      return;
+    }
+    if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
+      showToast("Mode demo - belum terhubung ke Apps Script");
+      return;
+    }
+    try{
+      await fetch(CONFIG.API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ type: "izin", alasan: alasan })
+      });
+      showToast("Izin tercatat, warga akan bisa melihatnya");
+      document.getElementById("izin-alasan").value = "";
+      document.getElementById("izin-form").style.display = "none";
+    }catch(err){
+      showToast("Gagal mengirim, coba lagi");
+    }
+  });
 
   loadInfo();
 
