@@ -66,6 +66,7 @@
   .shift-btn.masuk{background:var(--green-600);}
   .shift-btn.keluar{background:#B7452F;}
   .shift-btn:active{opacity:0.85;}
+  .shift-btn:disabled{background:var(--border); color:var(--text-muted); opacity:0.7;}
   .shift-status{
     display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);
     padding:0 4px; margin-bottom:20px;
@@ -188,8 +189,22 @@
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
       const jadwal = data.jadwalJaga;
-      namaPetugasSaatIni = (jadwal && jadwal.petugasAktif && jadwal.petugasAktif.nama) || "Tidak diketahui";
-      document.getElementById("nama-petugas").textContent = namaPetugasSaatIni;
+
+      const btnMasuk = document.getElementById("btn-masuk");
+      const btnKeluar = document.getElementById("btn-keluar");
+
+      if(jadwal && jadwal.izinAktif){
+        namaPetugasSaatIni = jadwal.izinAktif.nama || "Tidak diketahui";
+        document.getElementById("nama-petugas").textContent = `${namaPetugasSaatIni} (berhalangan, shift kosong)`;
+        btnMasuk.disabled = true;
+        btnKeluar.disabled = true;
+      } else {
+        namaPetugasSaatIni = (jadwal && jadwal.petugasAktif && jadwal.petugasAktif.nama) || "Tidak diketahui";
+        document.getElementById("nama-petugas").textContent = namaPetugasSaatIni;
+        btnMasuk.disabled = false;
+        btnKeluar.disabled = false;
+      }
+
       renderRiwayat(data.shiftTerakhir);
 
       const shift = data.shiftHariIni || {};
@@ -245,6 +260,7 @@
       showToast("Izin tercatat, warga akan bisa melihatnya");
       document.getElementById("izin-alasan").value = "";
       document.getElementById("izin-form").style.display = "none";
+      loadInfo();
     }catch(err){
       showToast("Gagal mengirim, coba lagi");
     }
