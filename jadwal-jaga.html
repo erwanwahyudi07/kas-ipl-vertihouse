@@ -92,15 +92,6 @@
 
   .empty{text-align:center; color:var(--text-muted); font-size:13px; padding:20px 0;}
 
-  .ronda-item{
-    display:flex; justify-content:space-between; align-items:center;
-    background:var(--card); border:1px solid var(--border); border-radius:12px;
-    padding:11px 14px; margin-bottom:8px; font-size:13px;
-  }
-  .ronda-item .area{font-weight:600;}
-  .ronda-item .nama{color:var(--text-muted); font-size:11.5px; margin-top:1px;}
-  .ronda-item .waktu{color:var(--blue-600); font-weight:600; font-size:12px; white-space:nowrap;}
-
   .shift-info-card{
     display:flex; justify-content:space-around;
     background:var(--card); border:1px solid var(--border); border-radius:12px;
@@ -128,11 +119,6 @@
 </main>
 
 <div style="padding:0 20px 8px;" id="shift-info-wrap"></div>
-
-<div style="padding:0 20px 8px;">
-  <p class="section-title">Ronda Terakhir</p>
-  <div id="ronda-content"><p class="empty">Memuat...</p></div>
-</div>
 
 <script src="./config.js"></script>
 <script>
@@ -218,22 +204,6 @@
     main.innerHTML = html;
   }
 
-  function renderRonda(list){
-    const el = document.getElementById("ronda-content");
-    if(!list || list.length === 0){
-      el.innerHTML = '<p class="empty">Belum ada ronda tercatat.</p>';
-      return;
-    }
-    el.innerHTML = list.slice(0, 5).map(r => `
-      <div class="ronda-item">
-        <div>
-          <div class="area">${r.area || "-"}</div>
-          <div class="nama">${r.nama || "-"}</div>
-        </div>
-        <span class="waktu">${(r.waktu || "").split(" ")[1] || r.waktu}</span>
-      </div>`).join("");
-  }
-
   function renderShiftInfo(shift){
     const el = document.getElementById("shift-info-wrap");
     const s = shift || {};
@@ -254,10 +224,6 @@
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
     if(usingDemo){
       render(DEMO_JADWAL);
-      renderRonda([
-        { waktu:"2026-08-07 21:15", nama:"Pak Anda", area:"Blok A" },
-        { waktu:"2026-08-07 19:40", nama:"Pak Anda", area:"Gerbang / Pos Jaga" }
-      ]);
       renderShiftInfo({ masuk:{waktu:"19:02"}, keluar:null });
       return;
     }
@@ -265,11 +231,9 @@
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
       render(data.jadwalJaga);
-      renderRonda(data.patroliTerakhir);
       renderShiftInfo(data.shiftHariIni);
     }catch(err){
       render(DEMO_JADWAL);
-      renderRonda([]);
       renderShiftInfo(null);
     }
   }
