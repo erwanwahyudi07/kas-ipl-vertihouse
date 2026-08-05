@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Riwayat Absensi Jaga - Kas IPL Vertihouse Sawangan II</title>
+<meta name="theme-color" content="#0F4C6E" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<link rel="icon" href="./icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#F3F6FA;
+    --card:#FFFFFF;
+    --blue-700:#0F4C6E;
+    --green-600:#1D9E75;
+    --text-1:#16232B;
+    --text-muted:#94A5AD;
+    --border:#DCE6EC;
+    font-family:"Plus Jakarta Sans", -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text-1);
+    padding-bottom:calc(env(safe-area-inset-bottom) + 24px);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mono{font-family:"JetBrains Mono", monospace;}
+
+  header{
+    padding:calc(env(safe-area-inset-top) + 18px) 20px 16px;
+    display:flex; align-items:center; gap:12px;
+    background:var(--blue-700); color:#fff;
+    position:sticky; top:0; z-index:20;
+  }
+  .back-btn{
+    width:36px; height:36px; border-radius:10px; border:none;
+    background:rgba(255,255,255,0.15); color:#fff;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .back-btn svg{width:18px; height:18px;}
+  .back-btn.spin svg{animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  header h1{font-size:16px; font-weight:700; margin:0;}
+  header p{font-size:12px; margin:2px 0 0; color:rgba(255,255,255,0.75);}
+
+  main{padding:18px 20px 8px;}
+
+  .riwayat-item{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .riwayat-item .jenis{font-size:13.5px; font-weight:600;}
+  .riwayat-item .jenis.masuk{color:var(--green-600);}
+  .riwayat-item .jenis.keluar{color:#B7452F;}
+  .riwayat-item .nama{font-size:12px; color:var(--text-muted); margin-top:2px;}
+  .riwayat-item .waktu{text-align:right; font-size:12.5px; font-weight:600; white-space:nowrap;}
+  .riwayat-item .tanggal{font-size:11px; color:var(--text-muted); font-weight:400; margin-top:2px;}
+
+  .empty{text-align:center; color:var(--text-muted); font-size:13px; padding:20px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="back-btn" onclick="location.href='./jadwal-jaga.html'" aria-label="Kembali">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+  </button>
+  <div style="flex:1">
+    <h1>📋 Riwayat Absensi Jaga</h1>
+    <p>Vertihouse Sawangan II</p>
+  </div>
+  <button class="back-btn" id="reload-btn" aria-label="Muat ulang">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+  </button>
+</header>
+
+<main>
+  <div id="riwayat-list"><p class="empty">Memuat...</p></div>
+</main>
+
+<script src="./config.js"></script>
+<script>
+  const fmtTanggal = (d) => new Date(d).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" });
+
+  const DEMO_RIWAYAT = [
+    { waktu:"2026-08-08 07:03", nama:"Pak Anda", jenis:"Masuk" },
+    { waktu:"2026-08-07 19:58", nama:"Pak RT", jenis:"Keluar" },
+    { waktu:"2026-08-07 07:01", nama:"Pak RT", jenis:"Masuk" },
+    { waktu:"2026-08-06 19:55", nama:"Pak Anda", jenis:"Keluar" },
+    { waktu:"2026-08-06 06:58", nama:"Pak Anda", jenis:"Masuk" }
+  ];
+
+  function renderRiwayat(list){
+    const el = document.getElementById("riwayat-list");
+    if(!list || list.length === 0){
+      el.innerHTML = '<p class="empty">Belum ada riwayat absensi tercatat.</p>';
+      return;
+    }
+    el.innerHTML = list.map(r => {
+      const isMasuk = r.jenis === "Masuk";
+      const parts = (r.waktu || "").split(" ");
+      const tanggal = parts[0] ? fmtTanggal(parts[0]) : "";
+      const jam = parts[1] || r.waktu || "-";
+      return `
+      <div class="riwayat-item">
+        <div>
+          <div class="jenis ${isMasuk ? "masuk" : "keluar"}">${isMasuk ? "🟢 Masuk Jaga" : "🔴 Selesai Jaga"}</div>
+          <div class="nama">${r.nama || "-"}</div>
+        </div>
+        <div class="waktu">
+          <div class="mono">${jam}</div>
+          <div class="tanggal">${tanggal}</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  async function loadData(){
+    const reloadBtn = document.getElementById("reload-btn");
+    reloadBtn.classList.add("spin");
+    const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
+    if(usingDemo){
+      renderRiwayat(DEMO_RIWAYAT);
+      reloadBtn.classList.remove("spin");
+      return;
+    }
+    try{
+      const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
+      const data = await res.json();
+      renderRiwayat(data.shiftTerakhir);
+    }catch(err){
+      renderRiwayat(DEMO_RIWAYAT);
+    }finally{
+      reloadBtn.classList.remove("spin");
+    }
+  }
+
+  document.getElementById("reload-btn").addEventListener("click", loadData);
+  loadData();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+  }
+</script>
+</body>
+</html>
