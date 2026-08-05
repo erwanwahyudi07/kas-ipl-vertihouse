@@ -120,6 +120,8 @@
 
 <div style="padding:0 20px 8px;" id="shift-info-wrap"></div>
 
+<div id="jadwal-list-wrap"></div>
+
 <script src="./config.js"></script>
 <script>
   const fmtDate = (d) => new Date(d).toLocaleDateString("id-ID", { weekday:"long", day:"numeric", month:"short", year:"numeric" });
@@ -174,7 +176,18 @@
         </div>`;
     }
 
-    html += '<p class="section-title">Riwayat &amp; Jadwal Harian</p>';
+    main.innerHTML = html;
+  }
+
+  function renderJadwalList(jadwal){
+    const wrap = document.getElementById("jadwal-list-wrap");
+    if(!jadwal){
+      wrap.innerHTML = "";
+      return;
+    }
+
+    let html = '<div style="padding:0 20px 8px;">';
+    html += '<p class="section-title">Jadwal Harian</p>';
 
     if(!jadwal.riwayat || jadwal.riwayat.length === 0){
       html += '<p class="empty">Belum ada jadwal tercatat.</p>';
@@ -201,7 +214,8 @@
       }).join("");
     }
 
-    main.innerHTML = html;
+    html += '</div>';
+    wrap.innerHTML = html;
   }
 
   function renderShiftInfo(shift){
@@ -225,6 +239,7 @@
     if(usingDemo){
       render(DEMO_JADWAL);
       renderShiftInfo({ masuk:{waktu:"19:02"}, keluar:null });
+      renderJadwalList(DEMO_JADWAL);
       return;
     }
     try{
@@ -232,9 +247,11 @@
       const data = await res.json();
       render(data.jadwalJaga);
       renderShiftInfo(data.shiftHariIni);
+      renderJadwalList(data.jadwalJaga);
     }catch(err){
       render(DEMO_JADWAL);
       renderShiftInfo(null);
+      renderJadwalList(DEMO_JADWAL);
     }
   }
 
