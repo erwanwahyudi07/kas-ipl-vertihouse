@@ -1,10 +1,14 @@
-const CACHE_NAME = "kas-ipl-shell-v2";
+const CACHE_NAME = "kas-ipl-shell-v3";
 const SHELL_FILES = [
   "./index.html",
   "./manifest.json",
+  "./manifest-satpam.json",
   "./config.js",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./darurat.html",
+  "./jadwal-jaga.html",
+  "./patroli.html"
 ];
 
 self.addEventListener("install", (event) => {
