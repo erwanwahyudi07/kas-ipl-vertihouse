@@ -21,6 +21,8 @@
     --blue-100:#DCEBF4;
     --green-600:#1D9E75;
     --green-100:#E1F5EE;
+    --amber-700:#9A5B0E;
+    --amber-100:#FDEBD3;
     --text-1:#16232B;
     --text-2:#5C6E78;
     --text-muted:#94A5AD;
@@ -67,8 +69,13 @@
     color:var(--text-muted); margin:16px 2px 10px;
   }
 
+  .carryover-notice{
+    background:var(--amber-100); color:var(--amber-700); font-size:12px;
+    padding:10px 12px; border-radius:10px; margin-bottom:10px; line-height:1.5;
+  }
+
   .shift-toggle-btn{
-    width:100%; border:none; border-radius:14px; padding:22px 10px; font-size:16px; font-weight:700;
+    width:100%; border:none; border-radius:14px; padding:20px 10px; font-size:15px; font-weight:700;
     color:#fff; font-family:inherit; margin-bottom:8px;
   }
   .shift-toggle-btn.masuk{background:var(--green-600);}
@@ -139,13 +146,15 @@
 
 <main>
   <div class="info-card">
-    <p class="label">Petugas terdaftar sedang bertugas</p>
+    <p class="label">Status saat ini</p>
     <p class="nama" id="nama-petugas">Memuat...</p>
   </div>
 
   <p class="section-title">Mulai / Selesai Jaga</p>
   <div class="durasi-jaga" id="durasi-jaga">Sudah bertugas: <span class="mono" id="durasi-teks">00:00:00</span></div>
-  <button class="shift-toggle-btn masuk" id="btn-shift-toggle">Mulai Jaga</button>
+  <div class="carryover-notice" id="carryover-notice" style="display:none;"></div>
+  <button class="shift-toggle-btn keluar" id="btn-keluar" style="display:none;">Selesai Jaga</button>
+  <button class="shift-toggle-btn masuk" id="btn-masuk" style="display:none;">Mulai Jaga</button>
   <div class="shift-status">
     <span>Masuk: <b id="jam-masuk">-</b></span>
     <span>Keluar: <b id="jam-keluar">-</b></span>
@@ -166,8 +175,6 @@
 
 <script src="./config.js"></script>
 <script>
-  let namaPetugasSaatIni = "Petugas";
-
   function showToast(msg){
     const t = document.getElementById("toast");
     t.textContent = msg;
@@ -192,7 +199,6 @@
     }).join("");
   }
 
-  let sedangBertugasSaatIni = false;
   let durasiInterval = null;
 
   function pad2(n){ return String(n).padStart(2, "0"); }
@@ -223,7 +229,10 @@
     const reloadBtn = document.getElementById("reload-btn");
     reloadBtn.classList.add("spin");
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
-    const btnToggle = document.getElementById("btn-shift-toggle");
+
+    const btnKeluar = document.getElementById("btn-keluar");
+    const btnMasuk = document.getElementById("btn-masuk");
+    const carryoverNotice = document.getElementById("carryover-notice");
 
     if(usingDemo){
       document.getElementById("nama-petugas").textContent = "Mode demo";
@@ -234,31 +243,52 @@
     try{
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
-      const jadwal = data.jadwalJaga;
+      const jadwal = data.jadwalJaga || {};
       const shift = data.shiftHariIni || {};
 
-      if(jadwal && jadwal.izinAktif){
-        namaPetugasSaatIni = jadwal.izinAktif.nama || "Tidak diketahui";
-        document.getElementById("nama-petugas").textContent = `${namaPetugasSaatIni} (berhalangan, shift kosong)`;
-        btnToggle.disabled = true;
-        btnToggle.textContent = "Shift Kosong";
-        btnToggle.className = "shift-toggle-btn masuk";
+      const izin = jadwal.izinAktif || null;
+      const scheduledName = (jadwal.petugasAktif && jadwal.petugasAktif.nama) || null;
+      const openName = (shift.sedangBertugas && shift.masuk && shift.masuk.nama) || null;
+      const isCarryover = !!(openName && scheduledName && openName !== scheduledName);
+
+      btnKeluar.style.display = "none";
+      btnMasuk.style.display = "none";
+      carryoverNotice.style.display = "none";
+      btnKeluar.disabled = false;
+      btnMasuk.disabled = false;
+
+      if(openName){
+        btnKeluar.style.display = "block";
+        btnKeluar.textContent = `Selesai Jaga — ${openName}`;
+        mulaiTimerDurasi(shift.masukTimestamp || Date.now());
+
+        if(isCarryover){
+          carryoverNotice.style.display = "block";
+          carryoverNotice.textContent = `${openName} belum check-out dari shift sebelumnya. Pastikan tekan tombol sesuai nama Anda.`;
+          btnMasuk.style.display = "block";
+          btnMasuk.textContent = `Mulai Jaga — ${scheduledName}`;
+        }
+
+        document.getElementById("nama-petugas").textContent = isCarryover
+          ? `${openName} (belum check-out)`
+          : openName;
+      } else if(izin){
+        document.getElementById("nama-petugas").textContent = `${izin.nama || "Tidak diketahui"} (berhalangan, shift kosong)`;
+        btnMasuk.style.display = "block";
+        btnMasuk.textContent = "Shift Kosong";
+        btnMasuk.disabled = true;
+        hentikanTimerDurasi();
+      } else if(scheduledName){
+        document.getElementById("nama-petugas").textContent = scheduledName;
+        btnMasuk.style.display = "block";
+        btnMasuk.textContent = `Mulai Jaga — ${scheduledName}`;
         hentikanTimerDurasi();
       } else {
-        namaPetugasSaatIni = (jadwal && jadwal.petugasAktif && jadwal.petugasAktif.nama) || "Tidak diketahui";
-        document.getElementById("nama-petugas").textContent = namaPetugasSaatIni;
-        btnToggle.disabled = false;
-
-        sedangBertugasSaatIni = !!shift.sedangBertugas;
-        if(sedangBertugasSaatIni){
-          btnToggle.textContent = "Selesai Jaga";
-          btnToggle.className = "shift-toggle-btn keluar";
-          mulaiTimerDurasi(shift.masukTimestamp || Date.now());
-        } else {
-          btnToggle.textContent = "Mulai Jaga";
-          btnToggle.className = "shift-toggle-btn masuk";
-          hentikanTimerDurasi();
-        }
+        document.getElementById("nama-petugas").textContent = "Tidak ada jadwal";
+        btnMasuk.style.display = "block";
+        btnMasuk.textContent = "Tidak Ada Jadwal";
+        btnMasuk.disabled = true;
+        hentikanTimerDurasi();
       }
 
       renderRiwayat(data.shiftTerakhir);
@@ -272,8 +302,7 @@
     }
   }
 
-  async function checkInOutShift(){
-    const jenis = sedangBertugasSaatIni ? "Keluar" : "Masuk";
+  async function checkInOutShift(jenis){
     if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
       showToast("Mode demo - belum terhubung ke Apps Script");
       return;
@@ -291,7 +320,8 @@
     }
   }
 
-  document.getElementById("btn-shift-toggle").addEventListener("click", () => checkInOutShift());
+  document.getElementById("btn-keluar").addEventListener("click", () => checkInOutShift("Keluar"));
+  document.getElementById("btn-masuk").addEventListener("click", () => checkInOutShift("Masuk"));
   document.getElementById("reload-btn").addEventListener("click", loadInfo);
 
   document.getElementById("btn-buka-izin").addEventListener("click", () => {
