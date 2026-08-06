@@ -1,4 +1,4 @@
-const CACHE_NAME = "kas-ipl-shell-v4";
+const CACHE_NAME = "kas-ipl-shell-v5";
 const SHELL_FILES = [
   "./index.html",
   "./manifest.json",
