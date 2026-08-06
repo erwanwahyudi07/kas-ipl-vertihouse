@@ -62,7 +62,7 @@
     padding:16px; margin-bottom:16px; text-align:center;
   }
   .info-card .label{font-size:12px; color:var(--text-muted); margin:0 0 4px;}
-  .info-card .nama{font-size:18px; font-weight:700; margin:0;}
+  .info-card .nama{font-size:17px; font-weight:700; margin:0;}
 
   .section-title{
     font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
@@ -75,9 +75,10 @@
   }
 
   .shift-toggle-btn{
-    width:100%; border:none; border-radius:14px; padding:20px 10px; font-size:15px; font-weight:700;
-    color:#fff; font-family:inherit; margin-bottom:8px;
+    width:100%; border:none; border-radius:14px; padding:18px 10px; font-size:14.5px; font-weight:700;
+    color:#fff; font-family:inherit; margin-bottom:8px; text-align:center;
   }
+  .shift-toggle-btn .sub{display:block; font-weight:400; font-size:11.5px; margin-top:2px; opacity:0.85;}
   .shift-toggle-btn.masuk{background:var(--green-600);}
   .shift-toggle-btn.keluar{background:#B7452F;}
   .shift-toggle-btn:active{opacity:0.85;}
@@ -153,8 +154,7 @@
   <p class="section-title">Mulai / Selesai Jaga</p>
   <div class="durasi-jaga" id="durasi-jaga">Sudah bertugas: <span class="mono" id="durasi-teks">00:00:00</span></div>
   <div class="carryover-notice" id="carryover-notice" style="display:none;"></div>
-  <button class="shift-toggle-btn keluar" id="btn-keluar" style="display:none;">Selesai Jaga</button>
-  <button class="shift-toggle-btn masuk" id="btn-masuk" style="display:none;">Mulai Jaga</button>
+  <div id="tombol-jaga"></div>
   <div class="shift-status">
     <span>Masuk: <b id="jam-masuk">-</b></span>
     <span>Keluar: <b id="jam-keluar">-</b></span>
@@ -230,12 +230,12 @@
     reloadBtn.classList.add("spin");
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
 
-    const btnKeluar = document.getElementById("btn-keluar");
-    const btnMasuk = document.getElementById("btn-masuk");
+    const container = document.getElementById("tombol-jaga");
     const carryoverNotice = document.getElementById("carryover-notice");
+    const namaEl = document.getElementById("nama-petugas");
 
     if(usingDemo){
-      document.getElementById("nama-petugas").textContent = "Mode demo";
+      namaEl.textContent = "Mode demo";
       renderRiwayat([]);
       reloadBtn.classList.remove("spin");
       return;
@@ -248,47 +248,42 @@
 
       const izin = jadwal.izinAktif || null;
       const scheduledName = (jadwal.petugasAktif && jadwal.petugasAktif.nama) || null;
-      const openName = (shift.sedangBertugas && shift.masuk && shift.masuk.nama) || null;
-      const isCarryover = !!(openName && scheduledName && openName !== scheduledName);
+      const openList = shift.openList || [];
 
-      btnKeluar.style.display = "none";
-      btnMasuk.style.display = "none";
+      container.innerHTML = "";
       carryoverNotice.style.display = "none";
-      btnKeluar.disabled = false;
-      btnMasuk.disabled = false;
+      hentikanTimerDurasi();
 
-      if(openName){
-        btnKeluar.style.display = "block";
-        btnKeluar.textContent = `Selesai Jaga — ${openName}`;
-        mulaiTimerDurasi(shift.masukTimestamp || Date.now());
+      const scheduledOpen = openList.find(o => o.nama === scheduledName);
+      const isSingleNormal = openList.length === 1 && scheduledOpen;
 
-        if(isCarryover){
-          carryoverNotice.style.display = "block";
-          carryoverNotice.textContent = `${openName} belum check-out dari shift sebelumnya. Pastikan tekan tombol sesuai nama Anda.`;
-          btnMasuk.style.display = "block";
-          btnMasuk.textContent = `Mulai Jaga — ${scheduledName}`;
-        }
-
-        document.getElementById("nama-petugas").textContent = isCarryover
-          ? `${openName} (belum check-out)`
-          : openName;
-      } else if(izin){
-        document.getElementById("nama-petugas").textContent = `${izin.nama || "Tidak diketahui"} (berhalangan, shift kosong)`;
-        btnMasuk.style.display = "block";
-        btnMasuk.textContent = "Shift Kosong";
-        btnMasuk.disabled = true;
-        hentikanTimerDurasi();
-      } else if(scheduledName){
-        document.getElementById("nama-petugas").textContent = scheduledName;
-        btnMasuk.style.display = "block";
-        btnMasuk.textContent = `Mulai Jaga — ${scheduledName}`;
-        hentikanTimerDurasi();
+      if(openList.length === 0 && izin){
+        namaEl.textContent = `${izin.nama || "Tidak diketahui"} (berhalangan, shift kosong)`;
+        container.innerHTML = '<button class="shift-toggle-btn masuk" disabled>Shift Kosong</button>';
+      } else if(openList.length === 0 && !scheduledName){
+        namaEl.textContent = "Tidak ada jadwal";
+        container.innerHTML = '<button class="shift-toggle-btn masuk" disabled>Tidak Ada Jadwal</button>';
+      } else if(openList.length === 0 && scheduledName){
+        namaEl.textContent = scheduledName;
+        container.innerHTML = `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${scheduledName}">Mulai Jaga — ${scheduledName}</button>`;
+      } else if(isSingleNormal){
+        namaEl.textContent = scheduledName;
+        mulaiTimerDurasi(scheduledOpen.timestamp);
+        container.innerHTML = `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${scheduledName}">Selesai Jaga — ${scheduledName}</button>`;
       } else {
-        document.getElementById("nama-petugas").textContent = "Tidak ada jadwal";
-        btnMasuk.style.display = "block";
-        btnMasuk.textContent = "Tidak Ada Jadwal";
-        btnMasuk.disabled = true;
-        hentikanTimerDurasi();
+        const namaList = openList.map(o => o.nama).join(", ");
+        namaEl.textContent = `${namaList} (belum check-out)`;
+        carryoverNotice.style.display = "block";
+        carryoverNotice.textContent = `${namaList} masih tercatat bertugas. Pastikan tekan tombol sesuai nama Anda sendiri.`;
+
+        let html = "";
+        openList.forEach(o => {
+          html += `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${o.nama}">Selesai Jaga — ${o.nama}<span class="sub">sejak ${o.waktu}</span></button>`;
+        });
+        if(scheduledName && !scheduledOpen){
+          html += `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${scheduledName}">Mulai Jaga — ${scheduledName}</button>`;
+        }
+        container.innerHTML = html;
       }
 
       renderRiwayat(data.shiftTerakhir);
@@ -296,13 +291,13 @@
       document.getElementById("jam-masuk").textContent = shift.masuk ? shift.masuk.waktu : "-";
       document.getElementById("jam-keluar").textContent = shift.keluar ? shift.keluar.waktu : "-";
     }catch(err){
-      document.getElementById("nama-petugas").textContent = "Gagal memuat";
+      namaEl.textContent = "Gagal memuat";
     }finally{
       reloadBtn.classList.remove("spin");
     }
   }
 
-  async function checkInOutShift(jenis){
+  async function checkInOutShift(jenis, nama){
     if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
       showToast("Mode demo - belum terhubung ke Apps Script");
       return;
@@ -311,7 +306,7 @@
       await fetch(CONFIG.API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ jenis: jenis })
+        body: JSON.stringify({ jenis: jenis, nama: nama })
       });
       showToast(jenis === "Masuk" ? "Mulai jaga tercatat" : "Selesai jaga tercatat");
       loadInfo();
@@ -320,8 +315,12 @@
     }
   }
 
-  document.getElementById("btn-keluar").addEventListener("click", () => checkInOutShift("Keluar"));
-  document.getElementById("btn-masuk").addEventListener("click", () => checkInOutShift("Masuk"));
+  document.getElementById("tombol-jaga").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-jenis]");
+    if(!btn) return;
+    checkInOutShift(btn.dataset.jenis, btn.dataset.nama);
+  });
+
   document.getElementById("reload-btn").addEventListener("click", loadInfo);
 
   document.getElementById("btn-buka-izin").addEventListener("click", () => {
