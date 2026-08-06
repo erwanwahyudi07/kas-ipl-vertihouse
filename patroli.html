@@ -88,11 +88,6 @@
     margin-bottom:12px; display:none;
   }
   .durasi-jaga .mono{font-size:14px; color:var(--text-1);}
-  .shift-status{
-    display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);
-    padding:0 4px; margin-bottom:20px;
-  }
-  .shift-status b{color:var(--text-1);}
 
   .izin-btn{
     width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px;
@@ -155,10 +150,6 @@
   <div class="durasi-jaga" id="durasi-jaga">Sudah bertugas: <span class="mono" id="durasi-teks">00:00:00</span></div>
   <div class="carryover-notice" id="carryover-notice" style="display:none;"></div>
   <div id="tombol-jaga"></div>
-  <div class="shift-status">
-    <span>Masuk: <b id="jam-masuk">-</b></span>
-    <span>Keluar: <b id="jam-keluar">-</b></span>
-  </div>
 
   <p class="section-title">Berhalangan / Tidak Bisa Masuk</p>
   <button class="izin-btn" id="btn-buka-izin">Ajukan Izin / Berhalangan</button>
@@ -190,10 +181,9 @@
     }
     el.innerHTML = list.slice(0, 8).map(r => {
       const isMasuk = r.jenis === "Masuk";
-      const icon = isMasuk ? "🟢" : "🔴";
       return `
       <div class="riwayat-item">
-        <span class="jenis ${isMasuk ? "masuk" : "keluar"}">${icon} ${r.jenis} · ${r.nama || "-"}</span>
+        <span class="jenis ${isMasuk ? "masuk" : "keluar"}">${r.jenis} · ${r.nama || "-"}</span>
         <span class="waktu">${(r.waktu || "").split(" ")[1] || r.waktu}</span>
       </div>`;
     }).join("");
@@ -269,7 +259,7 @@
       } else if(isSingleNormal){
         namaEl.textContent = scheduledName;
         mulaiTimerDurasi(scheduledOpen.timestamp);
-        container.innerHTML = `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${scheduledName}">Selesai Jaga — ${scheduledName}</button>`;
+        container.innerHTML = `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${scheduledName}">Selesai Jaga — ${scheduledName}<span class="sub">sejak ${scheduledOpen.waktu}</span></button>`;
       } else {
         const namaList = openList.map(o => o.nama).join(", ");
         namaEl.textContent = `${namaList} (belum check-out)`;
@@ -287,9 +277,6 @@
       }
 
       renderRiwayat(data.shiftTerakhir);
-
-      document.getElementById("jam-masuk").textContent = shift.masuk ? shift.masuk.waktu : "-";
-      document.getElementById("jam-keluar").textContent = shift.keluar ? shift.keluar.waktu : "-";
     }catch(err){
       namaEl.textContent = "Gagal memuat";
     }finally{
