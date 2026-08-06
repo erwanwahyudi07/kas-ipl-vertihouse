@@ -234,20 +234,22 @@
     wrap.innerHTML = html;
   }
 
-  function renderShiftInfo(shift){
+  function renderShiftInfo(shift, scheduledName){
     const el = document.getElementById("shift-info-wrap");
-    const s = shift || {};
-    el.innerHTML = `
-      <div class="shift-info-card">
-        <div class="item">
-          <div class="lbl">Masuk Jaga</div>
-          <div class="val">${s.masuk ? s.masuk.waktu : "-"}</div>
-        </div>
-        <div class="item">
-          <div class="lbl">Keluar Jaga</div>
-          <div class="val">${s.keluar ? s.keluar.waktu : "-"}</div>
-        </div>
-      </div>`;
+    const openList = (shift && shift.openList) || [];
+    const match = openList.find(o => o.nama === scheduledName);
+
+    if(match){
+      el.innerHTML = `
+        <div class="shift-info-card">
+          <div class="item">
+            <div class="lbl">Sedang Bertugas Sejak</div>
+            <div class="val">${match.waktu}</div>
+          </div>
+        </div>`;
+    } else {
+      el.innerHTML = "";
+    }
   }
 
   async function loadData(){
@@ -256,7 +258,7 @@
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
     if(usingDemo){
       render(DEMO_JADWAL);
-      renderShiftInfo({ masuk:{waktu:"19:02"}, keluar:null });
+      renderShiftInfo({ openList:[{ nama:"Pak Budi", waktu:"19:02" }] }, "Pak Budi");
       renderJadwalList(DEMO_JADWAL);
       reloadBtn.classList.remove("spin");
       return;
@@ -264,12 +266,13 @@
     try{
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
+      const scheduledName = (data.jadwalJaga && data.jadwalJaga.petugasAktif && data.jadwalJaga.petugasAktif.nama) || null;
       render(data.jadwalJaga);
-      renderShiftInfo(data.shiftHariIni);
+      renderShiftInfo(data.shiftHariIni, scheduledName);
       renderJadwalList(data.jadwalJaga);
     }catch(err){
       render(DEMO_JADWAL);
-      renderShiftInfo(null);
+      renderShiftInfo(null, null);
       renderJadwalList(DEMO_JADWAL);
     }finally{
       reloadBtn.classList.remove("spin");
