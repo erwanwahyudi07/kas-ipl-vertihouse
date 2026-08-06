@@ -86,6 +86,16 @@
     border-radius:12px; margin-bottom:16px; line-height:1.5;
   }
 
+  .error-card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:36px 24px; text-align:center; margin-top:8px;
+  }
+  .error-card .msg{font-size:13.5px; color:var(--text-2); margin:0 0 18px; line-height:1.6;}
+  .error-card button{
+    background:var(--teal-600); color:#fff; border:none; border-radius:12px;
+    padding:11px 22px; font-size:13.5px; font-weight:600; font-family:inherit;
+  }
+
   .saldo-card{
     background:var(--teal-600); color:#fff; border-radius:20px;
     padding:22px 20px; margin-bottom:14px;
@@ -189,51 +199,60 @@
 <main>
   <div id="demo-banner" class="demo-banner" style="display:none;"></div>
 
-  <div class="saldo-card">
-    <p class="label">Saldo kas saat ini</p>
-    <p class="value mono" id="saldo">Rp -</p>
-    <p class="updated" id="updated">Memuat data...</p>
-  </div>
-
-  <div class="grid-2">
-    <div class="stat-card in">
-      <p class="label">Masuk bulan ini</p>
-      <p class="value mono" id="masuk-bulan">Rp -</p>
-    </div>
-    <div class="stat-card out">
-      <p class="label">Keluar bulan ini</p>
-      <p class="value mono" id="keluar-bulan">Rp -</p>
+  <div id="error-state" style="display:none;">
+    <div class="error-card">
+      <p class="msg">Gagal memuat data. Periksa koneksi internet Anda, lalu coba lagi.</p>
+      <button id="retry-btn">Coba Lagi</button>
     </div>
   </div>
 
-  <div class="card">
-    <p class="title">Status bayar IPL bulan ini</p>
-    <div class="progress-row">
-      <div class="progress-track" style="flex:1"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      <span id="progress-label" class="mono">-/-</span>
+  <div id="content-wrap">
+    <div class="saldo-card">
+      <p class="label">Saldo kas saat ini</p>
+      <p class="value mono" id="saldo">Rp -</p>
+      <p class="updated" id="updated">Memuat data...</p>
     </div>
-  </div>
 
-  <div class="card">
-    <p class="title">Belum bayar bulan ini</p>
-    <div id="belum-bayar-list"><p class="empty">Memuat data...</p></div>
-  </div>
+    <div class="grid-2">
+      <div class="stat-card in">
+        <p class="label">Masuk bulan ini</p>
+        <p class="value mono" id="masuk-bulan">Rp -</p>
+      </div>
+      <div class="stat-card out">
+        <p class="label">Keluar bulan ini</p>
+        <p class="value mono" id="keluar-bulan">Rp -</p>
+      </div>
+    </div>
 
-  <div class="card">
-    <p class="title">Rincian jenis IPL bulan ini</p>
-    <div class="kategori-row"><span>IPL Lengkap</span><span class="nominal mono" id="kat-lengkap">Rp -</span></div>
-    <div class="kategori-row"><span>IPL Keamanan</span><span class="nominal mono" id="kat-keamanan">Rp -</span></div>
-    <div class="kategori-row"><span>IPL Khusus</span><span class="nominal mono" id="kat-khusus">Rp -</span></div>
-  </div>
+    <div class="card">
+      <p class="title">Status bayar IPL bulan ini</p>
+      <div class="progress-row">
+        <div class="progress-track" style="flex:1"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+        <span id="progress-label" class="mono">-/-</span>
+      </div>
+    </div>
 
-  <div class="card" id="proyek-card" style="display:none;">
-    <p class="title">Anggaran Proyek &amp; Pengadaan</p>
-    <div id="proyek-list"></div>
-  </div>
+    <div class="card">
+      <p class="title">Belum bayar bulan ini</p>
+      <div id="belum-bayar-list"><p class="empty">Memuat data...</p></div>
+    </div>
 
-  <div class="card">
-    <p class="title">Riwayat transaksi</p>
-    <div id="tx-list"><p class="empty">Memuat transaksi...</p></div>
+    <div class="card">
+      <p class="title">Rincian jenis IPL bulan ini</p>
+      <div class="kategori-row"><span>IPL Lengkap</span><span class="nominal mono" id="kat-lengkap">Rp -</span></div>
+      <div class="kategori-row"><span>IPL Keamanan</span><span class="nominal mono" id="kat-keamanan">Rp -</span></div>
+      <div class="kategori-row"><span>IPL Khusus</span><span class="nominal mono" id="kat-khusus">Rp -</span></div>
+    </div>
+
+    <div class="card" id="proyek-card" style="display:none;">
+      <p class="title">Anggaran Proyek &amp; Pengadaan</p>
+      <div id="proyek-list"></div>
+    </div>
+
+    <div class="card">
+      <p class="title">Riwayat transaksi</p>
+      <div id="tx-list"><p class="empty">Memuat transaksi...</p></div>
+    </div>
   </div>
 </main>
 
@@ -380,11 +399,23 @@
     }).join("");
   }
 
+  function tampilkanError(){
+    document.getElementById("content-wrap").style.display = "none";
+    document.getElementById("demo-banner").style.display = "none";
+    document.getElementById("error-state").style.display = "block";
+  }
+
+  function sembunyikanError(){
+    document.getElementById("content-wrap").style.display = "block";
+    document.getElementById("error-state").style.display = "none";
+  }
+
   async function loadData(){
     const refreshBtn = document.getElementById("refresh-btn");
     refreshBtn.classList.add("spin");
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
     if(usingDemo){
+      sembunyikanError();
       render(DEMO_DATA, true);
       refreshBtn.classList.remove("spin");
       return;
@@ -392,18 +423,21 @@
     try{
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
+      sembunyikanError();
       render(data, false);
     }catch(err){
-      render(DEMO_DATA, true);
-      document.getElementById("demo-banner").style.display = "block";
-      document.getElementById("demo-banner").textContent =
-        "Gagal memuat data asli, menampilkan data contoh. Cek koneksi atau URL Apps Script.";
+      // PENTING: jangan tampilkan data contoh di sini - ini API_URL sudah
+      // dikonfigurasi tapi gagal diambil (jaringan/error), jadi lebih aman
+      // tampilkan empty state daripada angka palsu yang bisa disalahartikan
+      // sebagai data asli oleh warga.
+      tampilkanError();
     }finally{
       refreshBtn.classList.remove("spin");
     }
   }
 
   document.getElementById("refresh-btn").addEventListener("click", loadData);
+  document.getElementById("retry-btn").addEventListener("click", loadData);
   loadData();
 
   // Service worker
