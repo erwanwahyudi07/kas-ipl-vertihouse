@@ -240,6 +240,7 @@
 
       const izin = jadwal.izinAktif || null;
       const scheduledName = (jadwal.petugasAktif && jadwal.petugasAktif.nama) || null;
+      const berikutnya = jadwal.petugasBerikutnya || null;
       const openList = shift.openList || [];
 
       container.innerHTML = "";
@@ -249,34 +250,42 @@
       const scheduledOpen = openList.find(o => o.nama === scheduledName);
       const isSingleNormal = openList.length === 1 && scheduledOpen;
 
+      let html = "";
+
       if(openList.length === 0 && izin){
         namaEl.textContent = `${izin.nama || "Tidak diketahui"} (berhalangan, shift kosong)`;
-        container.innerHTML = '<button class="shift-toggle-btn masuk" disabled>Shift Kosong</button>';
+        html = '<button class="shift-toggle-btn masuk" disabled>Shift Kosong</button>';
       } else if(openList.length === 0 && !scheduledName){
         namaEl.textContent = "Tidak ada jadwal";
-        container.innerHTML = '<button class="shift-toggle-btn masuk" disabled>Tidak Ada Jadwal</button>';
+        html = '<button class="shift-toggle-btn masuk" disabled>Tidak Ada Jadwal</button>';
       } else if(openList.length === 0 && scheduledName){
         namaEl.textContent = scheduledName;
-        container.innerHTML = `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${scheduledName}">Mulai Jaga — ${scheduledName}</button>`;
+        html = `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${scheduledName}">Mulai Jaga — ${scheduledName}</button>`;
       } else if(isSingleNormal){
         namaEl.textContent = scheduledName;
         mulaiTimerDurasi(scheduledOpen.timestamp);
-        container.innerHTML = `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${scheduledName}">Selesai Jaga — ${scheduledName}<span class="sub">sejak ${scheduledOpen.waktu}</span></button>`;
+        html = `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${scheduledName}">Selesai Jaga — ${scheduledName}<span class="sub">sejak ${scheduledOpen.waktu}</span></button>`;
       } else {
         const namaList = openList.map(o => o.nama).join(", ");
         namaEl.textContent = `${namaList} (belum check-out)`;
         carryoverNotice.style.display = "block";
         carryoverNotice.textContent = `${namaList} masih tercatat bertugas. Pastikan tekan tombol sesuai nama Anda sendiri.`;
 
-        let html = "";
         openList.forEach(o => {
           html += `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${o.nama}">Selesai Jaga — ${o.nama}<span class="sub">sejak ${o.waktu}</span></button>`;
         });
         if(scheduledName && !scheduledOpen){
           html += `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${scheduledName}">Mulai Jaga — ${scheduledName}</button>`;
         }
-        container.innerHTML = html;
       }
+
+      const berikutnyaSudahOpen = berikutnya && openList.some(o => o.nama === berikutnya.nama);
+      const berikutnyaSamaScheduled = berikutnya && scheduledName && berikutnya.nama === scheduledName;
+      if(berikutnya && !berikutnyaSudahOpen && !berikutnyaSamaScheduled){
+        html += `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${berikutnya.nama}">Mulai Jaga — ${berikutnya.nama}<span class="sub">shift berikutnya, boleh check-in lebih awal</span></button>`;
+      }
+
+      container.innerHTML = html;
 
       renderRiwayat(data.shiftTerakhir);
     }catch(err){
@@ -286,9 +295,6 @@
     }
   }
 
-  // PENTING: pengaman anti-double-submit. Tanpa ini, tombol yang ditekan
-  // 2x cepat (atau koneksi lambat bikin orang refleks tap ulang) akan
-  // mengirim 2 request terpisah ke server, jadi absensinya tercatat dobel.
   let sedangKirimJaga = false;
 
   async function checkInOutShift(jenis, nama){
@@ -327,7 +333,6 @@
     form.style.display = form.style.display === "none" ? "block" : "none";
   });
 
-  // Pengaman anti-double-submit yang sama untuk kirim izin.
   let sedangKirimIzin = false;
 
   document.getElementById("btn-kirim-izin").addEventListener("click", async () => {
