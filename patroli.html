@@ -94,6 +94,7 @@
     padding:14px 10px; font-size:14px; font-weight:600; color:var(--text-1); font-family:inherit;
   }
   .izin-btn:active{background:var(--bg);}
+  .izin-btn:disabled{opacity:0.6;}
   .izin-form textarea{
     width:100%; border:1px solid var(--border); border-radius:12px; padding:10px 12px;
     font-family:inherit; font-size:16px; color:var(--text-1); resize:vertical; margin-top:10px;
@@ -104,6 +105,7 @@
     background:var(--blue-700); color:#fff; font-size:13.5px; font-weight:600; font-family:inherit;
   }
   .izin-kirim-btn:active{opacity:0.85;}
+  .izin-kirim-btn:disabled{opacity:0.6;}
 
   .toast{
     position:fixed; left:20px; right:20px; bottom:24px;
@@ -284,11 +286,19 @@
     }
   }
 
+  // PENTING: pengaman anti-double-submit. Tanpa ini, tombol yang ditekan
+  // 2x cepat (atau koneksi lambat bikin orang refleks tap ulang) akan
+  // mengirim 2 request terpisah ke server, jadi absensinya tercatat dobel.
+  let sedangKirimJaga = false;
+
   async function checkInOutShift(jenis, nama){
+    if(sedangKirimJaga) return;
     if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
       showToast("Mode demo - belum terhubung ke Apps Script");
       return;
     }
+    sedangKirimJaga = true;
+    document.querySelectorAll("#tombol-jaga button").forEach(b => b.disabled = true);
     try{
       await fetch(CONFIG.API_URL, {
         method: "POST",
@@ -296,15 +306,17 @@
         body: JSON.stringify({ jenis: jenis, nama: nama })
       });
       showToast(jenis === "Masuk" ? "Mulai jaga tercatat" : "Selesai jaga tercatat");
-      loadInfo();
     }catch(err){
       showToast("Gagal mencatat, coba lagi");
+    }finally{
+      sedangKirimJaga = false;
+      loadInfo();
     }
   }
 
   document.getElementById("tombol-jaga").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-jenis]");
-    if(!btn) return;
+    if(!btn || btn.disabled) return;
     checkInOutShift(btn.dataset.jenis, btn.dataset.nama);
   });
 
@@ -315,7 +327,11 @@
     form.style.display = form.style.display === "none" ? "block" : "none";
   });
 
+  // Pengaman anti-double-submit yang sama untuk kirim izin.
+  let sedangKirimIzin = false;
+
   document.getElementById("btn-kirim-izin").addEventListener("click", async () => {
+    if(sedangKirimIzin) return;
     const alasan = document.getElementById("izin-alasan").value.trim();
     if(!alasan){
       showToast("Tulis alasan dulu ya");
@@ -325,6 +341,9 @@
       showToast("Mode demo - belum terhubung ke Apps Script");
       return;
     }
+    sedangKirimIzin = true;
+    const btnKirim = document.getElementById("btn-kirim-izin");
+    btnKirim.disabled = true;
     try{
       await fetch(CONFIG.API_URL, {
         method: "POST",
@@ -337,6 +356,9 @@
       loadInfo();
     }catch(err){
       showToast("Gagal mengirim, coba lagi");
+    }finally{
+      sedangKirimIzin = false;
+      btnKirim.disabled = false;
     }
   });
 
