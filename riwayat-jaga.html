@@ -17,6 +17,7 @@
 --card:#FFFFFF;
 --blue-700:#0F4C6E;
 --green-600:#1D9E75;
+--amber-700:#9A5B0E;
 --text-1:#16232B;
 --text-muted:#94A5AD;
 --border:#DCE6EC;
@@ -57,8 +58,10 @@ padding:14px 16px; margin-bottom:10px;
 .riwayat-item .jenis{font-size:13.5px; font-weight:600;}
 .riwayat-item .jenis.masuk{color:var(--green-600);}
 .riwayat-item .jenis.keluar{color:#B7452F;}
+.riwayat-item .jenis.izin{color:var(--amber-700);}
 .riwayat-item .nama{font-size:12px; color:var(--text-muted); margin-top:2px;}
 .riwayat-item .durasi{font-size:11.5px; color:var(--text-muted); margin-top:4px;}
+.riwayat-item .alasan{font-size:11.5px; color:var(--text-muted); margin-top:4px; max-width:220px;}
 .riwayat-item .waktu{text-align:right; font-size:12.5px; font-weight:600; white-space:nowrap;}
 .riwayat-item .tanggal{font-size:11px; color:var(--text-muted); font-weight:400; margin-top:2px;}
 
@@ -112,10 +115,29 @@ el.innerHTML = '<p class="empty">Belum ada riwayat absensi tercatat.</p>';
 return;
 }
 el.innerHTML = list.map(r => {
-const isMasuk = r.jenis === "Masuk";
 const parts = (r.waktu || "").split(" ");
 const tanggal = parts[0] ? fmtTanggal(parts[0]) : "";
 const jam = parts[1] || r.waktu || "-";
+
+// PENTING: sekarang riwayat menggabungkan 2 sumber - absensi (Masuk/Keluar)
+// DAN laporan izin/berhalangan - supaya warga bisa lihat riwayat lengkap,
+// termasuk kapan satpam izin dan alasannya, bukan cuma jam masuk/keluar.
+if(r.jenis === "Izin"){
+  return `
+  <div class="riwayat-item">
+  <div>
+  <div class="jenis izin">Izin / Berhalangan · Shift ${r.shift || "-"}</div>
+  <div class="nama">${r.nama || "-"}</div>
+  <div class="alasan">Alasan: ${r.alasan || "-"}</div>
+  </div>
+  <div class="waktu">
+  <div class="mono">${jam}</div>
+  <div class="tanggal">${tanggal}</div>
+  </div>
+  </div>`;
+}
+
+const isMasuk = r.jenis === "Masuk";
 const durasiHtml = (!isMasuk && r.durasiMenit != null)
   ? `<div class="durasi">Durasi kerja: ${fmtDurasi(r.durasiMenit)}</div>`
   : "";
