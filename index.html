@@ -86,16 +86,6 @@
     border-radius:12px; margin-bottom:16px; line-height:1.5;
   }
 
-  .error-card{
-    background:var(--card); border:1px solid var(--border); border-radius:16px;
-    padding:36px 24px; text-align:center; margin-top:8px;
-  }
-  .error-card .msg{font-size:13.5px; color:var(--text-2); margin:0 0 18px; line-height:1.6;}
-  .error-card button{
-    background:var(--teal-600); color:#fff; border:none; border-radius:12px;
-    padding:11px 22px; font-size:13.5px; font-weight:600; font-family:inherit;
-  }
-
   .saldo-card{
     background:var(--teal-600); color:#fff; border-radius:20px;
     padding:22px 20px; margin-bottom:14px;
@@ -141,23 +131,31 @@
 
   .proyek-item{padding:12px 0; border-bottom:1px solid var(--border);}
   .proyek-item:last-child{border-bottom:none;}
-  .proyek-item .baris-atas{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .proyek-item .baris-atas{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
   .proyek-item .nama{font-size:13.5px; font-weight:600;}
   .proyek-status{
     font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:6px; white-space:nowrap;
   }
-  .proyek-status.siapdiproses{background:var(--teal-50); color:var(--teal-600);}
-  .proyek-status.menunggudana{background:var(--amber-100); color:var(--amber-700);}
-  .proyek-status.selesai{background:var(--border); color:var(--text-2);}
+  .proyek-status.direncanakan{background:var(--border); color:var(--text-2);}
+  .proyek-status.berjalan{background:#FDEBD3; color:#9A5B0E;}
+  .proyek-status.selesai{background:var(--teal-50); color:var(--teal-600);}
   .proyek-status.dibatalkan{background:var(--border); color:var(--text-muted);}
-  .proyek-item .progress-row{margin-top:0; margin-bottom:6px;}
-  .proyek-item .progress-row span{font-size:12px;}
+  .proyek-bar-track{height:6px; border-radius:4px; background:var(--border); overflow:hidden; margin-bottom:4px;}
+  .proyek-bar-fill{height:100%; border-radius:4px;}
+  .proyek-bar-fill.aman{background:var(--teal-400);}
+  .proyek-bar-fill.mepet{background:#D98C2B;}
+  .proyek-bar-fill.over{background:var(--coral-600);}
   .proyek-item .keterangan{font-size:11.5px; color:var(--text-muted);}
 
   .bb-item{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13.5px;}
   .bb-item:last-child{border-bottom:none;}
   .bb-item .kav{color:var(--text-muted); font-size:12px; margin-left:6px;}
   .bb-badge{background:#FBE7DE; color:var(--coral-600); font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px;}
+  .tunggakan-item{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13.5px;}
+  .tunggakan-item:last-child{border-bottom:none;}
+  .tunggakan-item .kav{color:var(--text-muted); font-size:12px; margin-left:6px;}
+  .tunggakan-item .sub{color:var(--text-muted); font-size:11.5px; margin-top:2px;}
+  .tunggakan-badge{background:#FDEBD3; color:#9A5B0E; font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; white-space:nowrap;}
 
   .install-bar{
     position:fixed; left:16px; right:16px; bottom:16px;
@@ -199,60 +197,56 @@
 <main>
   <div id="demo-banner" class="demo-banner" style="display:none;"></div>
 
-  <div id="error-state" style="display:none;">
-    <div class="error-card">
-      <p class="msg">Gagal memuat data. Periksa koneksi internet Anda, lalu coba lagi.</p>
-      <button id="retry-btn">Coba Lagi</button>
+  <div class="saldo-card">
+    <p class="label">Saldo kas saat ini</p>
+    <p class="value mono" id="saldo">Rp -</p>
+    <p class="updated" id="updated">Memuat data...</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="stat-card in">
+      <p class="label">Masuk bulan ini</p>
+      <p class="value mono" id="masuk-bulan">Rp -</p>
+    </div>
+    <div class="stat-card out">
+      <p class="label">Keluar bulan ini</p>
+      <p class="value mono" id="keluar-bulan">Rp -</p>
     </div>
   </div>
 
-  <div id="content-wrap">
-    <div class="saldo-card">
-      <p class="label">Saldo kas saat ini</p>
-      <p class="value mono" id="saldo">Rp -</p>
-      <p class="updated" id="updated">Memuat data...</p>
+  <div class="card">
+    <p class="title">Status bayar IPL bulan ini</p>
+    <div class="progress-row">
+      <div class="progress-track" style="flex:1"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <span id="progress-label" class="mono">-/-</span>
     </div>
+  </div>
 
-    <div class="grid-2">
-      <div class="stat-card in">
-        <p class="label">Masuk bulan ini</p>
-        <p class="value mono" id="masuk-bulan">Rp -</p>
-      </div>
-      <div class="stat-card out">
-        <p class="label">Keluar bulan ini</p>
-        <p class="value mono" id="keluar-bulan">Rp -</p>
-      </div>
-    </div>
+  <div class="card">
+    <p class="title">Belum bayar bulan ini</p>
+    <div id="belum-bayar-list"><p class="empty">Memuat data...</p></div>
+  </div>
 
-    <div class="card">
-      <p class="title">Status bayar IPL bulan ini</p>
-      <div class="progress-row">
-        <div class="progress-track" style="flex:1"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-        <span id="progress-label" class="mono">-/-</span>
-      </div>
-    </div>
+  <div class="card" id="tunggakan-card" style="display:none;">
+    <p class="title">Tunggakan (akumulasi beberapa bulan)</p>
+    <div id="tunggakan-list"></div>
+  </div>
 
-    <div class="card">
-      <p class="title">Belum bayar bulan ini</p>
-      <div id="belum-bayar-list"><p class="empty">Memuat data...</p></div>
-    </div>
+  <div class="card">
+    <p class="title">Rincian jenis IPL bulan ini</p>
+    <div class="kategori-row"><span>IPL Lengkap</span><span class="nominal mono" id="kat-lengkap">Rp -</span></div>
+    <div class="kategori-row"><span>IPL Keamanan</span><span class="nominal mono" id="kat-keamanan">Rp -</span></div>
+    <div class="kategori-row"><span>IPL Khusus</span><span class="nominal mono" id="kat-khusus">Rp -</span></div>
+  </div>
 
-    <div class="card">
-      <p class="title">Rincian jenis IPL bulan ini</p>
-      <div class="kategori-row"><span>IPL Lengkap</span><span class="nominal mono" id="kat-lengkap">Rp -</span></div>
-      <div class="kategori-row"><span>IPL Keamanan</span><span class="nominal mono" id="kat-keamanan">Rp -</span></div>
-      <div class="kategori-row"><span>IPL Khusus</span><span class="nominal mono" id="kat-khusus">Rp -</span></div>
-    </div>
+  <div class="card" id="proyek-card" style="display:none;">
+    <p class="title">Anggaran Proyek &amp; Pengadaan</p>
+    <div id="proyek-list"></div>
+  </div>
 
-    <div class="card" id="proyek-card" style="display:none;">
-      <p class="title">Anggaran Proyek &amp; Pengadaan</p>
-      <div id="proyek-list"></div>
-    </div>
-
-    <div class="card">
-      <p class="title">Riwayat transaksi</p>
-      <div id="tx-list"><p class="empty">Memuat transaksi...</p></div>
-    </div>
+  <div class="card">
+    <p class="title">Riwayat transaksi</p>
+    <div id="tx-list"><p class="empty">Memuat transaksi...</p></div>
   </div>
 </main>
 
@@ -287,9 +281,9 @@
       { tanggal:"2026-08-01", jenis:"Keluar", kategori:"Listrik", unit:"", jumlah:100000, keterangan:"" }
     ],
     anggaranProyek: [
-      { nama:"Pengadaan CCTV (6 titik)", targetDana:15000000, prioritas:1, status:"Siap Diproses", kekurangan:0 },
-      { nama:"Pagar Otomatis Gerbang Utama", targetDana:8000000, prioritas:2, status:"Menunggu Dana", kekurangan:3200000 },
-      { nama:"Perbaikan Lampu PJU", targetDana:3000000, prioritas:3, status:"Menunggu Dana", kekurangan:6200000 }
+      { nama:"Pengadaan CCTV (6 titik)", anggaran:15000000, realisasi:9500000, status:"Berjalan", persentase:63, overBudget:false },
+      { nama:"Pagar Otomatis Gerbang", anggaran:8000000, realisasi:8200000, status:"Selesai", persentase:103, overBudget:true },
+      { nama:"Perbaikan Lampu PJU", anggaran:3000000, realisasi:0, status:"Direncanakan", persentase:0, overBudget:false }
     ]
   };
 
@@ -339,6 +333,27 @@
       ).join("");
     }
 
+    const tunggakanCard = document.getElementById("tunggakan-card");
+    const tunggakanList = document.getElementById("tunggakan-list");
+    const tunggakanTerakumulasi = (data.tunggakan || []).filter(t => t.jumlahBulan > 1);
+    if(tunggakanTerakumulasi.length > 0){
+      tunggakanCard.style.display = "block";
+      tunggakanList.innerHTML = tunggakanTerakumulasi.map(t => {
+        const nominalText = t.estimasiNominal != null
+          ? "Estimasi " + rupiah(t.estimasiNominal)
+          : "Nominal belum diketahui";
+        return `<div class="tunggakan-item">
+          <span>
+            ${t.nama || "-"}<span class="kav">${t.kav || ""}</span>
+            <div class="sub">${t.bulanBolong.join(", ")} · ${nominalText}</div>
+          </span>
+          <span class="tunggakan-badge">${t.jumlahBulan} bulan</span>
+        </div>`;
+      }).join("");
+    } else {
+      tunggakanCard.style.display = "none";
+    }
+
     document.getElementById("kat-lengkap").textContent = rupiah(data.breakdown.iplLengkap);
     document.getElementById("kat-keamanan").textContent = rupiah(data.breakdown.iplKeamanan);
     document.getElementById("kat-khusus").textContent = rupiah(data.breakdown.iplKhusus);
@@ -349,32 +364,15 @@
       proyekCard.style.display = "block";
       proyekList.innerHTML = data.anggaranProyek.map(p => {
         const statusClass = p.status.toLowerCase().replace(/\s+/g, "");
-
-        let persen;
-        if(p.status === "Siap Diproses" || p.status === "Selesai"){
-          persen = 100;
-        } else if(p.status === "Dibatalkan"){
-          persen = 0;
-        } else {
-          const terisi = p.targetDana - (p.kekurangan || 0);
-          persen = p.targetDana > 0 ? Math.max(0, Math.min(100, Math.round((terisi / p.targetDana) * 100))) : 0;
-        }
-
-        const barColor = (p.status === "Siap Diproses" || p.status === "Selesai") ? "var(--teal-400)" : "var(--amber-600)";
-        const keterangan = p.status === "Menunggu Dana"
-          ? `Target ${rupiah(p.targetDana)} · kurang ${rupiah(p.kekurangan)} lagi`
-          : `Target ${rupiah(p.targetDana)}`;
-
+        const pct = Math.min(p.persentase, 100);
+        const barClass = p.overBudget ? "over" : (p.persentase >= 85 ? "mepet" : "aman");
         return `<div class="proyek-item">
           <div class="baris-atas">
             <span class="nama">${p.nama}</span>
             <span class="proyek-status ${statusClass}">${p.status}</span>
           </div>
-          <div class="progress-row">
-            <div class="progress-track" style="flex:1"><div class="progress-fill" style="width:${persen}%; background:${barColor}"></div></div>
-            <span class="mono">${persen}%</span>
-          </div>
-          <div class="keterangan">${keterangan}</div>
+          <div class="proyek-bar-track"><div class="proyek-bar-fill ${barClass}" style="width:${pct}%"></div></div>
+          <div class="keterangan">${rupiah(p.realisasi)} / ${rupiah(p.anggaran)} (${p.persentase}%)${p.overBudget ? " · lewat anggaran" : ""}</div>
         </div>`;
       }).join("");
     } else {
@@ -399,23 +397,11 @@
     }).join("");
   }
 
-  function tampilkanError(){
-    document.getElementById("content-wrap").style.display = "none";
-    document.getElementById("demo-banner").style.display = "none";
-    document.getElementById("error-state").style.display = "block";
-  }
-
-  function sembunyikanError(){
-    document.getElementById("content-wrap").style.display = "block";
-    document.getElementById("error-state").style.display = "none";
-  }
-
   async function loadData(){
     const refreshBtn = document.getElementById("refresh-btn");
     refreshBtn.classList.add("spin");
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
     if(usingDemo){
-      sembunyikanError();
       render(DEMO_DATA, true);
       refreshBtn.classList.remove("spin");
       return;
@@ -423,21 +409,18 @@
     try{
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
-      sembunyikanError();
       render(data, false);
     }catch(err){
-      // PENTING: jangan tampilkan data contoh di sini - ini API_URL sudah
-      // dikonfigurasi tapi gagal diambil (jaringan/error), jadi lebih aman
-      // tampilkan empty state daripada angka palsu yang bisa disalahartikan
-      // sebagai data asli oleh warga.
-      tampilkanError();
+      render(DEMO_DATA, true);
+      document.getElementById("demo-banner").style.display = "block";
+      document.getElementById("demo-banner").textContent =
+        "Gagal memuat data asli, menampilkan data contoh. Cek koneksi atau URL Apps Script.";
     }finally{
       refreshBtn.classList.remove("spin");
     }
   }
 
   document.getElementById("refresh-btn").addEventListener("click", loadData);
-  document.getElementById("retry-btn").addEventListener("click", loadData);
   loadData();
 
   // Service worker
