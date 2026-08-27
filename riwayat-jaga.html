@@ -119,9 +119,6 @@ const parts = (r.waktu || "").split(" ");
 const tanggal = parts[0] ? fmtTanggal(parts[0]) : "";
 const jam = parts[1] || r.waktu || "-";
 
-// PENTING: sekarang riwayat menggabungkan 2 sumber - absensi (Masuk/Keluar)
-// DAN laporan izin/berhalangan - supaya warga bisa lihat riwayat lengkap,
-// termasuk kapan satpam izin dan alasannya, bukan cuma jam masuk/keluar.
 if(r.jenis === "Izin"){
   return `
   <div class="riwayat-item">
@@ -180,7 +177,10 @@ document.getElementById("reload-btn").addEventListener("click", loadData);
 loadData();
 
 if("serviceWorker" in navigator){
-window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+window.addEventListener("load", () => {
+navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" })
+.then((reg) => reg.update());
+});
 }
 </script>
 </body>
