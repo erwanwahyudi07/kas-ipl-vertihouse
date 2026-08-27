@@ -470,8 +470,14 @@
   loadData();
 
   // Service worker
+  // updateViaCache:"none" - file sw.js itu sendiri jangan ikut kena HTTP cache
+  // browser, biar browser selalu cek versi terbaru script ini tiap kunjungan.
+  // Tanpa ini, browser defaultnya masih boleh nyimpen sw.js lama sampai 24 jam.
   if("serviceWorker" in navigator){
-    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" })
+        .then((reg) => reg.update());
+    });
   }
 
   // Install prompt (Android/Chrome)
