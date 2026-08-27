@@ -21,8 +21,6 @@
     --blue-100:#DCEBF4;
     --green-600:#1D9E75;
     --green-100:#E1F5EE;
-    --amber-700:#9A5B0E;
-    --amber-100:#FDEBD3;
     --text-1:#16232B;
     --text-2:#5C6E78;
     --text-muted:#94A5AD;
@@ -46,15 +44,6 @@
   header h1{font-size:16px; font-weight:700; margin:0;}
   header p{font-size:12px; margin:2px 0 0; color:rgba(255,255,255,0.75);}
 
-  .reload-btn{
-    width:36px; height:36px; border-radius:10px; border:none;
-    background:rgba(255,255,255,0.15); color:#fff; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; margin-left:auto;
-  }
-  .reload-btn svg{width:18px; height:18px;}
-  .reload-btn.spin svg{animation:spin 0.8s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-
   main{padding:18px 20px 8px;}
 
   .info-card{
@@ -62,23 +51,17 @@
     padding:16px; margin-bottom:16px; text-align:center;
   }
   .info-card .label{font-size:12px; color:var(--text-muted); margin:0 0 4px;}
-  .info-card .nama{font-size:17px; font-weight:700; margin:0;}
+  .info-card .nama{font-size:18px; font-weight:700; margin:0;}
 
   .section-title{
     font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
     color:var(--text-muted); margin:16px 2px 10px;
   }
 
-  .carryover-notice{
-    background:var(--amber-100); color:var(--amber-700); font-size:12px;
-    padding:10px 12px; border-radius:10px; margin-bottom:10px; line-height:1.5;
-  }
-
   .shift-toggle-btn{
-    width:100%; border:none; border-radius:14px; padding:18px 10px; font-size:14.5px; font-weight:700;
-    color:#fff; font-family:inherit; margin-bottom:8px; text-align:center;
+    width:100%; border:none; border-radius:14px; padding:22px 10px; font-size:16px; font-weight:700;
+    color:#fff; font-family:inherit; margin-bottom:8px;
   }
-  .shift-toggle-btn .sub{display:block; font-weight:400; font-size:11.5px; margin-top:2px; opacity:0.85;}
   .shift-toggle-btn.masuk{background:var(--green-600);}
   .shift-toggle-btn.keluar{background:#B7452F;}
   .shift-toggle-btn:active{opacity:0.85;}
@@ -88,13 +71,17 @@
     margin-bottom:12px; display:none;
   }
   .durasi-jaga .mono{font-size:14px; color:var(--text-1);}
+  .shift-status{
+    display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);
+    padding:0 4px; margin-bottom:20px;
+  }
+  .shift-status b{color:var(--text-1);}
 
   .izin-btn{
     width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px;
     padding:14px 10px; font-size:14px; font-weight:600; color:var(--text-1); font-family:inherit;
   }
   .izin-btn:active{background:var(--bg);}
-  .izin-btn:disabled{opacity:0.6;}
   .izin-form textarea{
     width:100%; border:1px solid var(--border); border-radius:12px; padding:10px 12px;
     font-family:inherit; font-size:16px; color:var(--text-1); resize:vertical; margin-top:10px;
@@ -105,7 +92,6 @@
     background:var(--blue-700); color:#fff; font-size:13.5px; font-weight:600; font-family:inherit;
   }
   .izin-kirim-btn:active{opacity:0.85;}
-  .izin-kirim-btn:disabled{opacity:0.6;}
 
   .toast{
     position:fixed; left:20px; right:20px; bottom:24px;
@@ -125,7 +111,10 @@
   .riwayat-item .jenis{font-weight:600;}
   .riwayat-item .jenis.masuk{color:var(--green-600);}
   .riwayat-item .jenis.keluar{color:#B7452F;}
-  .riwayat-item .waktu{color:var(--text-muted); font-size:12px;}
+  .riwayat-item .jenis.izin{color:#9A5B0E;}
+  .riwayat-item .waktu-wrap{text-align:right;}
+  .riwayat-item .waktu{color:var(--text-1); font-size:13px; font-weight:600;}
+  .riwayat-item .tanggal{color:var(--text-muted); font-size:11px;}
 
   .empty{text-align:center; color:var(--text-muted); font-size:13px; padding:16px 0;}
 </style>
@@ -137,21 +126,21 @@
     <h1>🚶 Portal Satpam</h1>
     <p>Vertihouse Sawangan II · Absensi Jaga</p>
   </div>
-  <button class="reload-btn" id="reload-btn" aria-label="Muat ulang">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-  </button>
 </header>
 
 <main>
   <div class="info-card">
-    <p class="label">Status saat ini</p>
+    <p class="label">Petugas terdaftar sedang bertugas</p>
     <p class="nama" id="nama-petugas">Memuat...</p>
   </div>
 
   <p class="section-title">Mulai / Selesai Jaga</p>
   <div class="durasi-jaga" id="durasi-jaga">Sudah bertugas: <span class="mono" id="durasi-teks">00:00:00</span></div>
-  <div class="carryover-notice" id="carryover-notice" style="display:none;"></div>
-  <div id="tombol-jaga"></div>
+  <button class="shift-toggle-btn masuk" id="btn-shift-toggle">Mulai Jaga</button>
+  <div class="shift-status">
+    <span>Masuk: <b id="jam-masuk">-</b></span>
+    <span>Keluar: <b id="jam-keluar">-</b></span>
+  </div>
 
   <p class="section-title">Berhalangan / Tidak Bisa Masuk</p>
   <button class="izin-btn" id="btn-buka-izin">Ajukan Izin / Berhalangan</button>
@@ -168,11 +157,17 @@
 
 <script src="./config.js"></script>
 <script>
+  let namaPetugasSaatIni = "Petugas";
+
   function showToast(msg){
     const t = document.getElementById("toast");
     t.textContent = msg;
     t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), 2500);
+  }
+
+  function fmtTanggalPendek(d){
+    return new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
   }
 
   function renderRiwayat(list){
@@ -182,15 +177,34 @@
       return;
     }
     el.innerHTML = list.slice(0, 8).map(r => {
-      const isMasuk = r.jenis === "Masuk";
+      const parts = (r.waktu || "").split(" ");
+      const tanggal = parts[0] ? fmtTanggalPendek(parts[0]) : "";
+      const jam = parts[1] || r.waktu || "-";
+
+      let jenisLabel, jenisClass, icon;
+      if(r.jenis === "Izin"){
+        jenisLabel = `Izin · Shift ${r.shift || "-"} · ${r.nama || "-"}`;
+        jenisClass = "izin";
+        icon = "🟡";
+      } else {
+        const isMasuk = r.jenis === "Masuk";
+        jenisLabel = `${r.jenis} · ${r.nama || "-"}`;
+        jenisClass = isMasuk ? "masuk" : "keluar";
+        icon = isMasuk ? "🟢" : "🔴";
+      }
+
       return `
       <div class="riwayat-item">
-        <span class="jenis ${isMasuk ? "masuk" : "keluar"}">${r.jenis} · ${r.nama || "-"}</span>
-        <span class="waktu">${(r.waktu || "").split(" ")[1] || r.waktu}</span>
+        <span class="jenis ${jenisClass}">${icon} ${jenisLabel}</span>
+        <span class="waktu-wrap">
+          <div class="waktu">${jam}</div>
+          <div class="tanggal">${tanggal}</div>
+        </span>
       </div>`;
     }).join("");
   }
 
+  let sedangBertugasSaatIni = false;
   let durasiInterval = null;
 
   function pad2(n){ return String(n).padStart(2, "0"); }
@@ -218,125 +232,80 @@
   }
 
   async function loadInfo(){
-    const reloadBtn = document.getElementById("reload-btn");
-    reloadBtn.classList.add("spin");
     const usingDemo = !CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL");
-
-    const container = document.getElementById("tombol-jaga");
-    const carryoverNotice = document.getElementById("carryover-notice");
-    const namaEl = document.getElementById("nama-petugas");
+    const btnToggle = document.getElementById("btn-shift-toggle");
 
     if(usingDemo){
-      namaEl.textContent = "Mode demo";
+      document.getElementById("nama-petugas").textContent = "Mode demo";
       renderRiwayat([]);
-      reloadBtn.classList.remove("spin");
       return;
     }
     try{
       const res = await fetch(CONFIG.API_URL, { cache:"no-store" });
       const data = await res.json();
-      const jadwal = data.jadwalJaga || {};
+      const jadwal = data.jadwalJaga;
       const shift = data.shiftHariIni || {};
 
-      const izin = jadwal.izinAktif || null;
-      const scheduledName = (jadwal.petugasAktif && jadwal.petugasAktif.nama) || null;
-      const berikutnya = jadwal.petugasBerikutnya || null;
-      const openList = shift.openList || [];
-
-      container.innerHTML = "";
-      carryoverNotice.style.display = "none";
-      hentikanTimerDurasi();
-
-      const scheduledOpen = openList.find(o => o.nama === scheduledName);
-      const isSingleNormal = openList.length === 1 && scheduledOpen;
-
-      let html = "";
-
-      if(openList.length === 0 && izin){
-        namaEl.textContent = `${izin.nama || "Tidak diketahui"} (berhalangan, shift kosong)`;
-        html = '<button class="shift-toggle-btn masuk" disabled>Shift Kosong</button>';
-      } else if(openList.length === 0 && !scheduledName){
-        namaEl.textContent = "Tidak ada jadwal";
-        html = '<button class="shift-toggle-btn masuk" disabled>Tidak Ada Jadwal</button>';
-      } else if(openList.length === 0 && scheduledName){
-        namaEl.textContent = scheduledName;
-        html = `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${scheduledName}">Mulai Jaga — ${scheduledName}</button>`;
-      } else if(isSingleNormal){
-        namaEl.textContent = scheduledName;
-        mulaiTimerDurasi(scheduledOpen.timestamp);
-        html = `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${scheduledName}">Selesai Jaga — ${scheduledName}<span class="sub">sejak ${scheduledOpen.waktu}</span></button>`;
+      if(jadwal && jadwal.izinAktif){
+        namaPetugasSaatIni = jadwal.izinAktif.nama || "Tidak diketahui";
+        document.getElementById("nama-petugas").textContent = `${namaPetugasSaatIni} (berhalangan, shift kosong)`;
+        btnToggle.disabled = true;
+        btnToggle.textContent = "Shift Kosong";
+        btnToggle.className = "shift-toggle-btn masuk";
+        hentikanTimerDurasi();
       } else {
-        const namaList = openList.map(o => o.nama).join(", ");
-        namaEl.textContent = `${namaList} (belum check-out)`;
-        carryoverNotice.style.display = "block";
-        carryoverNotice.textContent = `${namaList} masih tercatat bertugas. Pastikan tekan tombol sesuai nama Anda sendiri.`;
+        namaPetugasSaatIni = (jadwal && jadwal.petugasAktif && jadwal.petugasAktif.nama) || "Tidak diketahui";
+        document.getElementById("nama-petugas").textContent = namaPetugasSaatIni;
+        btnToggle.disabled = false;
 
-        openList.forEach(o => {
-          html += `<button class="shift-toggle-btn keluar" data-jenis="Keluar" data-nama="${o.nama}">Selesai Jaga — ${o.nama}<span class="sub">sejak ${o.waktu}</span></button>`;
-        });
-        if(scheduledName && !scheduledOpen){
-          html += `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${scheduledName}">Mulai Jaga — ${scheduledName}</button>`;
+        sedangBertugasSaatIni = !!shift.sedangBertugas;
+        if(sedangBertugasSaatIni){
+          btnToggle.textContent = "Selesai Jaga";
+          btnToggle.className = "shift-toggle-btn keluar";
+          mulaiTimerDurasi(shift.masukTimestamp || Date.now());
+        } else {
+          btnToggle.textContent = "Mulai Jaga";
+          btnToggle.className = "shift-toggle-btn masuk";
+          hentikanTimerDurasi();
         }
       }
 
-      const berikutnyaSudahOpen = berikutnya && openList.some(o => o.nama === berikutnya.nama);
-      const berikutnyaSamaScheduled = berikutnya && scheduledName && berikutnya.nama === scheduledName;
-      if(berikutnya && !berikutnyaSudahOpen && !berikutnyaSamaScheduled){
-        html += `<button class="shift-toggle-btn masuk" data-jenis="Masuk" data-nama="${berikutnya.nama}">Mulai Jaga — ${berikutnya.nama}<span class="sub">shift berikutnya, boleh check-in lebih awal</span></button>`;
-      }
-
-      container.innerHTML = html;
-
       renderRiwayat(data.shiftTerakhir);
+
+      document.getElementById("jam-masuk").textContent = shift.masuk ? shift.masuk.waktu : "-";
+      document.getElementById("jam-keluar").textContent = shift.keluar ? shift.keluar.waktu : "-";
     }catch(err){
-      namaEl.textContent = "Gagal memuat";
-    }finally{
-      reloadBtn.classList.remove("spin");
+      document.getElementById("nama-petugas").textContent = "Gagal memuat";
     }
   }
 
-  let sedangKirimJaga = false;
-
-  async function checkInOutShift(jenis, nama){
-    if(sedangKirimJaga) return;
+  async function checkInOutShift(){
+    const jenis = sedangBertugasSaatIni ? "Keluar" : "Masuk";
     if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_URL")){
       showToast("Mode demo - belum terhubung ke Apps Script");
       return;
     }
-    sedangKirimJaga = true;
-    document.querySelectorAll("#tombol-jaga button").forEach(b => b.disabled = true);
     try{
       await fetch(CONFIG.API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ jenis: jenis, nama: nama })
+        body: JSON.stringify({ jenis: jenis })
       });
       showToast(jenis === "Masuk" ? "Mulai jaga tercatat" : "Selesai jaga tercatat");
+      loadInfo();
     }catch(err){
       showToast("Gagal mencatat, coba lagi");
-    }finally{
-      sedangKirimJaga = false;
-      loadInfo();
     }
   }
 
-  document.getElementById("tombol-jaga").addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-jenis]");
-    if(!btn || btn.disabled) return;
-    checkInOutShift(btn.dataset.jenis, btn.dataset.nama);
-  });
-
-  document.getElementById("reload-btn").addEventListener("click", loadInfo);
+  document.getElementById("btn-shift-toggle").addEventListener("click", () => checkInOutShift());
 
   document.getElementById("btn-buka-izin").addEventListener("click", () => {
     const form = document.getElementById("izin-form");
     form.style.display = form.style.display === "none" ? "block" : "none";
   });
 
-  let sedangKirimIzin = false;
-
   document.getElementById("btn-kirim-izin").addEventListener("click", async () => {
-    if(sedangKirimIzin) return;
     const alasan = document.getElementById("izin-alasan").value.trim();
     if(!alasan){
       showToast("Tulis alasan dulu ya");
@@ -346,9 +315,6 @@
       showToast("Mode demo - belum terhubung ke Apps Script");
       return;
     }
-    sedangKirimIzin = true;
-    const btnKirim = document.getElementById("btn-kirim-izin");
-    btnKirim.disabled = true;
     try{
       await fetch(CONFIG.API_URL, {
         method: "POST",
@@ -361,9 +327,6 @@
       loadInfo();
     }catch(err){
       showToast("Gagal mengirim, coba lagi");
-    }finally{
-      sedangKirimIzin = false;
-      btnKirim.disabled = false;
     }
   });
 
