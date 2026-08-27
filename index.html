@@ -109,6 +109,13 @@
     border:1px solid var(--border); margin-bottom:14px;
   }
   .card .title{font-size:13px; font-weight:600; color:var(--text-2); margin:0 0 10px;}
+  .riwayat-header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:2px;}
+  .riwayat-header .title{margin:0;}
+  .filter-select{
+    font-family:inherit; font-size:12.5px; font-weight:600; color:var(--text-1);
+    background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    padding:6px 10px; max-width:150px;
+  }
 
   .progress-track{height:8px; border-radius:5px; background:var(--border); overflow:hidden;}
   .progress-fill{height:100%; background:var(--teal-400); border-radius:5px; transition:width 0.4s;}
@@ -240,7 +247,10 @@
   </div>
 
   <div class="card">
-    <p class="title">Riwayat transaksi</p>
+    <div class="riwayat-header">
+      <p class="title">Riwayat transaksi</p>
+      <select id="filter-bulan" class="filter-select"></select>
+    </div>
     <div id="tx-list"><p class="empty">Memuat transaksi...</p></div>
   </div>
 </main>
@@ -375,12 +385,51 @@
       proyekCard.style.display = "none";
     }
 
+    renderTxFilter(data.transaksiTerbaru || []);
+  }
+
+  let semuaTransaksi = [];
+
+  function labelBulan(yyyyMM){
+    const bulanNames = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    const [y, m] = yyyyMM.split("-").map(Number);
+    return bulanNames[m - 1] + " " + y;
+  }
+
+  function renderTxFilter(transaksi){
+    semuaTransaksi = transaksi;
+    const select = document.getElementById("filter-bulan");
+
+    const bulanUnik = [];
+    transaksi.forEach(tx => {
+      const key = (tx.tanggal || "").slice(0, 7);
+      if(key && bulanUnik.indexOf(key) === -1) bulanUnik.push(key);
+    });
+
+    const opsiSebelumnya = select.value;
+    select.innerHTML = '<option value="">Semua Bulan</option>' +
+      bulanUnik.map(key => `<option value="${key}">${labelBulan(key)}</option>`).join("");
+
+    if(opsiSebelumnya && bulanUnik.indexOf(opsiSebelumnya) !== -1){
+      select.value = opsiSebelumnya;
+    } else if(bulanUnik.length > 0){
+      select.value = bulanUnik[0];
+    }
+
+    renderTxList(select.value);
+  }
+
+  function renderTxList(filterBulan){
     const list = document.getElementById("tx-list");
-    if(!data.transaksiTerbaru || data.transaksiTerbaru.length === 0){
-      list.innerHTML = '<p class="empty">Belum ada transaksi.</p>';
+    const filtered = filterBulan
+      ? semuaTransaksi.filter(tx => (tx.tanggal || "").slice(0, 7) === filterBulan)
+      : semuaTransaksi;
+
+    if(filtered.length === 0){
+      list.innerHTML = '<p class="empty">Tidak ada transaksi di bulan ini.</p>';
       return;
     }
-    list.innerHTML = data.transaksiTerbaru.map(tx => {
+    list.innerHTML = filtered.map(tx => {
       const isMasuk = tx.jenis === "Masuk";
       const desc = tx.kategori + (tx.unit ? " · " + tx.unit : "");
       return `<div class="tx-item">
@@ -417,6 +466,7 @@
   }
 
   document.getElementById("refresh-btn").addEventListener("click", loadData);
+  document.getElementById("filter-bulan").addEventListener("change", (e) => renderTxList(e.target.value));
   loadData();
 
   // Service worker
