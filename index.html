@@ -136,16 +136,11 @@
   .proyek-status{
     font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:6px; white-space:nowrap;
   }
-  .proyek-status.direncanakan{background:var(--border); color:var(--text-2);}
-  .proyek-status.berjalan{background:#FDEBD3; color:#9A5B0E;}
-  .proyek-status.selesai{background:var(--teal-50); color:var(--teal-600);}
+  .proyek-status.siapdiproses{background:var(--teal-50); color:var(--teal-600);}
+  .proyek-status.menunggudana{background:#FDEBD3; color:#9A5B0E;}
+  .proyek-status.selesai{background:var(--border); color:var(--text-2);}
   .proyek-status.dibatalkan{background:var(--border); color:var(--text-muted);}
-  .proyek-bar-track{height:6px; border-radius:4px; background:var(--border); overflow:hidden; margin-bottom:4px;}
-  .proyek-bar-fill{height:100%; border-radius:4px;}
-  .proyek-bar-fill.aman{background:var(--teal-400);}
-  .proyek-bar-fill.mepet{background:#D98C2B;}
-  .proyek-bar-fill.over{background:var(--coral-600);}
-  .proyek-item .keterangan{font-size:11.5px; color:var(--text-muted);}
+  .proyek-item .keterangan{font-size:11.5px; color:var(--text-muted); margin-top:2px;}
 
   .bb-item{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13.5px;}
   .bb-item:last-child{border-bottom:none;}
@@ -281,9 +276,9 @@
       { tanggal:"2026-08-01", jenis:"Keluar", kategori:"Listrik", unit:"", jumlah:100000, keterangan:"" }
     ],
     anggaranProyek: [
-      { nama:"Pengadaan CCTV (6 titik)", anggaran:15000000, realisasi:9500000, status:"Berjalan", persentase:63, overBudget:false },
-      { nama:"Pagar Otomatis Gerbang", anggaran:8000000, realisasi:8200000, status:"Selesai", persentase:103, overBudget:true },
-      { nama:"Perbaikan Lampu PJU", anggaran:3000000, realisasi:0, status:"Direncanakan", persentase:0, overBudget:false }
+      { nama:"Pengadaan CCTV (6 titik)", targetDana:15000000, prioritas:1, status:"Siap Diproses", kekurangan:0 },
+      { nama:"Pagar Otomatis Gerbang", targetDana:8000000, prioritas:2, status:"Menunggu Dana", kekurangan:3200000 },
+      { nama:"Perbaikan Lampu PJU", targetDana:3000000, prioritas:3, status:"Selesai", kekurangan:0 }
     ]
   };
 
@@ -364,15 +359,16 @@
       proyekCard.style.display = "block";
       proyekList.innerHTML = data.anggaranProyek.map(p => {
         const statusClass = p.status.toLowerCase().replace(/\s+/g, "");
-        const pct = Math.min(p.persentase, 100);
-        const barClass = p.overBudget ? "over" : (p.persentase >= 85 ? "mepet" : "aman");
+        const ket = ["Target " + rupiah(p.targetDana)];
+        if(p.status === "Menunggu Dana" && p.kekurangan > 0){
+          ket.push("kurang " + rupiah(p.kekurangan));
+        }
         return `<div class="proyek-item">
           <div class="baris-atas">
             <span class="nama">${p.nama}</span>
             <span class="proyek-status ${statusClass}">${p.status}</span>
           </div>
-          <div class="proyek-bar-track"><div class="proyek-bar-fill ${barClass}" style="width:${pct}%"></div></div>
-          <div class="keterangan">${rupiah(p.realisasi)} / ${rupiah(p.anggaran)} (${p.persentase}%)${p.overBudget ? " · lewat anggaran" : ""}</div>
+          <div class="keterangan">${ket.join(" · ")}</div>
         </div>`;
       }).join("");
     } else {
