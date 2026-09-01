@@ -46,6 +46,15 @@
   header h1{font-size:16px; font-weight:700; margin:0;}
   header p{font-size:12px; margin:2px 0 0; color:rgba(255,255,255,0.75);}
 
+  .reload-btn{
+    width:36px; height:36px; border-radius:10px; border:none;
+    background:rgba(255,255,255,0.15); color:#fff; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; margin-left:auto;
+  }
+  .reload-btn svg{width:18px; height:18px;}
+  .reload-btn.spin svg{animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
   main{padding:18px 20px 8px;}
 
   .info-card{
@@ -134,6 +143,9 @@
     <h1>🚶 Portal Satpam</h1>
     <p>Vertihouse Sawangan II · Absensi Jaga</p>
   </div>
+  <button class="reload-btn" id="reload-btn" aria-label="Muat ulang">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+  </button>
 </header>
 
 <main>
@@ -249,10 +261,13 @@
     const container = document.getElementById("tombol-jaga");
     const carryoverNotice = document.getElementById("carryover-notice");
     const namaEl = document.getElementById("nama-petugas");
+    const reloadBtn = document.getElementById("reload-btn");
+    reloadBtn.classList.add("spin");
 
     if(usingDemo){
       namaEl.textContent = "Mode demo";
       renderRiwayat([]);
+      reloadBtn.classList.remove("spin");
       return;
     }
     try{
@@ -316,6 +331,8 @@
       document.getElementById("jam-keluar").textContent = shift.keluar ? shift.keluar.waktu : "-";
     }catch(err){
       namaEl.textContent = "Gagal memuat";
+    }finally{
+      reloadBtn.classList.remove("spin");
     }
   }
 
@@ -349,6 +366,8 @@
     if(!btn || btn.disabled) return;
     checkInOutShift(btn.dataset.jenis, btn.dataset.nama);
   });
+
+  document.getElementById("reload-btn").addEventListener("click", loadInfo);
 
   document.getElementById("btn-buka-izin").addEventListener("click", () => {
     const form = document.getElementById("izin-form");
